@@ -6,10 +6,34 @@ readme = "README.md"
 
 requires-python = ">=3.13"
 
-dependencies = [
-]
-
-
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+
+[tool.poetry]
+packages = [
+    { include = "app", from = "src" }
+]
+
+[tool.poetry.dependencies]
+pydantic = "^2.11.7"
+pydantic-settings = "^2.10.1"
+sqlalchemy = "^2.0.42"
+asyncpg = "^0.30.0"
+gunicorn = "^23.0.0"
+uvicorn = "^0.35.0"
+fastapi = "^0.116.1"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.12.7"
+
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["C", "E", "F", "W"]
+
+[tool.ruff.format]
+quote-style = "single"
