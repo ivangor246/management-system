@@ -11,9 +11,10 @@ if TYPE_CHECKING:
 class User(Base):
     __tablename__ = 'users'
 
-    username: Mapped[str] = mapped_column(str_100)
-    hashed_password: Mapped[str]
-    first_name: Mapped[str] = mapped_column(str_100)
-    last_name: Mapped[str | None] = mapped_column(str_100)
+    username: Mapped[str_100] = mapped_column(unique=True)
+    email: Mapped[str]
+    hashed_password: Mapped[str_100]
+    first_name: Mapped[str_100]
+    last_name: Mapped[str_100 | None]
 
     teams: Mapped[list['UserTeam']] = relationship(back_populates='user')
