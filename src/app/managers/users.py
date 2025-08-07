@@ -1,12 +1,14 @@
 from typing import Annotated
 
 from fastapi import Depends
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
 from app.core.security import HashingMixin
 from app.models.users import User
+from app.schemas.auth import CredentialsSchema
 from app.schemas.users import UserCreateSchema
 
 
@@ -32,6 +34,15 @@ class UserManager(HashingMixin):
 
         await self.session.refresh(new_user)
         return new_user
+
+    async def check_user_by_credentials(self, credentials: CredentialsSchema) -> bool:
+        result = await self.session.execute(select(User).where(User.username == credentials.username))
+        user = result.scalar_one_or_none()
+
+        if not user or not self.verify_password(credentials.password, user.hashed_password):
+            return False
+
+        return True
 
 
 def get_user_manager(session: Annotated[AsyncSession, Depends(get_session)]) -> UserManager:

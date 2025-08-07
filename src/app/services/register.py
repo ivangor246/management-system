@@ -23,5 +23,5 @@ class RegisterService:
         return UserCreateSuccessSchema(user_id=new_user.id)
 
 
-def get_register_service(manager: Annotated[UserManager, Depends(get_user_manager)]):
+def get_register_service(manager: Annotated[UserManager, Depends(get_user_manager)]) -> RegisterService:
     return RegisterService(manager=manager)

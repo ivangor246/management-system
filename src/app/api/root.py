@@ -1,9 +1,11 @@
 from fastapi import APIRouter
 
+from .auth import auth_router
 from .register import register_router
 
 ROUTERS = [
     register_router,
+    auth_router,
 ]
 
 

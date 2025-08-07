@@ -10,6 +10,10 @@ class Config(BaseSettings):
     OPENAPI_URL: str = '/api/docs.json'
     DEBUG: bool = Field(alias='DEBUG') == 'True'
 
+    SECRET_KEY: str = Field(alias='SECRET_KEY')
+    TOKEN_ALGORITHM: str = 'HS256'
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 24 * 60
+
     DB_HOST: str = Field(alias='DB_HOST')
     DB_PORT: str = Field(alias='DB_PORT')
     DB_NAME: str = Field(alias='DB_NAME')
