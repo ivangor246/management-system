@@ -1,6 +1,10 @@
 from fastapi import APIRouter
 
-ROUTERS = []
+from .register import register_router
+
+ROUTERS = [
+    register_router,
+]
 
 
 def get_root_router() -> APIRouter:
