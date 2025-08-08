@@ -29,15 +29,39 @@ class HashingMixin:
 
 
 class TokenMixin:
-    @staticmethod
-    def generate_access_token(username: int) -> str:
-        return jwt.encode(TokenMixin.__create_payload(username), config.SECRET_KEY, algorithm=config.TOKEN_ALGORITHM)
+    def generate_access_token(self, username: str) -> str:
+        return jwt.encode(
+            self.__create_payload(username),
+            config.SECRET_KEY,
+            algorithm=config.TOKEN_ALGORITHM,
+        )
 
-    @staticmethod
-    def decode_access_token(token: str) -> dict:
-        return jwt.decode(token, config.SECRET_KEY, algorithms=[config.TOKEN_ALGORITHM])
+    def validate_token(self, token: str) -> dict | None:
+        try:
+            payload = self.__decode_access_token(token)
+        except Exception:
+            return None
 
-    @staticmethod
-    def __create_payload(username: int) -> dict:
+        if self.__is_token_expired(payload):
+            return None
+
+        return payload
+
+    def get_username_form_payload(self, payload: dict) -> str | None:
+        return payload.get('sub')
+
+    def __create_payload(self, username: str) -> dict:
         expires_at = int(datetime.now(timezone.utc).timestamp()) + config.ACCESS_TOKEN_EXPIRE_MINUTES * 60
         return {'sub': username, 'expires_at': expires_at}
+
+    def __decode_access_token(self, token: str) -> dict:
+        return jwt.decode(
+            token,
+            config.SECRET_KEY,
+            algorithms=[config.TOKEN_ALGORITHM],
+        )
+
+    def __is_token_expired(self, payload: dict) -> bool:
+        expires_at = payload.get('expires_at')
+        current_timestamp = int(datetime.now(timezone.utc).timestamp())
+        return current_timestamp > expires_at
