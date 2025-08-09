@@ -20,7 +20,7 @@ class AuthService(TokenMixin):
                 detail='Invalid username or password',
             )
 
-        access_token = self.generate_access_token(username=credentials.username)
+        access_token = self.generate_access_token(email=credentials.email)
         return TokenSchema(access_token=access_token)
 
 

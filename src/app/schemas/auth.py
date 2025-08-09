@@ -2,7 +2,7 @@ from .base import BaseSchema
 
 
 class CredentialsSchema(BaseSchema):
-    username: str
+    email: str
     password: str
 
 

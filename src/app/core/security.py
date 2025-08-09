@@ -29,9 +29,9 @@ class HashingMixin:
 
 
 class TokenMixin:
-    def generate_access_token(self, username: str) -> str:
+    def generate_access_token(self, email: str) -> str:
         return jwt.encode(
-            self.__create_payload(username),
+            self.__create_payload(email),
             config.SECRET_KEY,
             algorithm=config.TOKEN_ALGORITHM,
         )
@@ -47,12 +47,12 @@ class TokenMixin:
 
         return payload
 
-    def get_username_form_payload(self, payload: dict) -> str | None:
+    def get_email_form_payload(self, payload: dict) -> str | None:
         return payload.get('sub')
 
-    def __create_payload(self, username: str) -> dict:
+    def __create_payload(self, email: str) -> dict:
         expires_at = int(datetime.now(timezone.utc).timestamp()) + config.ACCESS_TOKEN_EXPIRE_MINUTES * 60
-        return {'sub': username, 'expires_at': expires_at}
+        return {'sub': email, 'expires_at': expires_at}
 
     def __decode_access_token(self, token: str) -> dict:
         return jwt.decode(
