@@ -58,6 +58,27 @@ async def get_request_user(
     return user
 
 
+async def require_user(
+    team_id: int,
+    user: Annotated[User, Depends(get_request_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> User:
+    stmt = select(UserTeam).where(
+        UserTeam.user_id == user.id,
+        UserTeam.team_id == team_id,
+    )
+    result = await session.execute(stmt)
+    association = result.scalar_one_or_none()
+
+    if not association:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='You are not a member of this team',
+        )
+
+    return user
+
+
 async def require_admin(
     team_id: int,
     user: Annotated[User, Depends(get_request_user)],
@@ -94,7 +115,7 @@ async def require_manager(
     if not association or association.role not in {UserRoles.MANAGER, UserRoles.ADMIN}:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail='Manager or admin access requires',
+            detail='Manager or admin access required',
         )
 
     return user

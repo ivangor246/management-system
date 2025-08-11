@@ -5,7 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.managers.teams import TeamManager, get_team_manager
 from app.models.users import User
-from app.schemas.teams import TeamCreateSchema, TeamCreateSuccessSchema
+from app.schemas.teams import TeamByMemberSchema, TeamCreateSchema, TeamCreateSuccessSchema, TeamMemberSchema
 
 
 class TeamService:
@@ -21,6 +21,37 @@ class TeamService:
                 detail='Something went wrong',
             )
         return TeamCreateSuccessSchema(team_id=new_team.id)
+
+    async def get_users(self, team_id: int, auth_user: User) -> list[TeamMemberSchema]:
+        users_and_roles = await self.manager.get_users(team_id)
+
+        if not users_and_roles:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail='Team not found',
+            )
+
+        members = [
+            TeamMemberSchema(
+                user_id=user.id,
+                username=user.username,
+                role=role,
+            )
+            for user, role in users_and_roles
+        ]
+        return members
+
+    async def get_teams_by_user(self, user_id: int) -> list[TeamByMemberSchema]:
+        teams_and_roles = await self.manager.get_teams_by_user(user_id)
+        teams = [
+            TeamByMemberSchema(
+                team_id=team.id,
+                name=team.name,
+                role=role,
+            )
+            for team, role in teams_and_roles
+        ]
+        return teams
 
 
 def get_team_service(manager: Annotated[TeamManager, Depends(get_team_manager)]) -> TeamService:

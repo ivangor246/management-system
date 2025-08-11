@@ -36,7 +36,8 @@ class UserManager(HashingMixin):
         return new_user
 
     async def check_user_by_credentials(self, credentials: CredentialsSchema) -> bool:
-        result = await self.session.execute(select(User).where(User.email == credentials.email))
+        stmt = select(User).where(User.email == credentials.email)
+        result = await self.session.execute(stmt)
         user = result.scalar_one_or_none()
 
         if not user or not self.verify_password(credentials.password, user.hashed_password):

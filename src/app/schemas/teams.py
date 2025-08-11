@@ -1,6 +1,6 @@
 from enum import Enum
 
-from .base import BaseCreateSchema, BaseModelSchema, BaseResponseSchema, BaseUpdateSchema
+from .base import BaseCreateSchema, BaseModelSchema, BaseResponseSchema, BaseSchema, BaseUpdateSchema
 
 
 class UserRoles(str, Enum):
@@ -13,6 +13,18 @@ class UserRoles(str, Enum):
 class UserTeamSchema(BaseModelSchema):
     user_id: int
     team_id: int
+    role: UserRoles
+
+
+class TeamMemberSchema(BaseSchema):
+    user_id: int
+    username: str
+    role: UserRoles
+
+
+class TeamByMemberSchema(BaseSchema):
+    team_id: int
+    name: str
     role: UserRoles
 
 

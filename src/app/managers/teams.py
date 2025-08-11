@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
@@ -45,6 +46,30 @@ class TeamManager:
 
         await self.session.refresh(new_user_team_association)
         return new_user_team_association
+
+    async def get_users(self, team_id: int) -> list[tuple[User, UserRoles]]:
+        stmt = (
+            select(User, UserTeam.role)
+            .join(
+                UserTeam,
+                UserTeam.user_id == User.id,
+            )
+            .where(UserTeam.team_id == team_id)
+        )
+        result = await self.session.execute(stmt)
+        return result.all()
+
+    async def get_teams_by_user(self, user_id: int) -> list[tuple[Team, UserRoles]]:
+        stmt = (
+            select(Team, UserTeam.role)
+            .join(
+                UserTeam,
+                UserTeam.team_id == Team.id,
+            )
+            .where(UserTeam.user_id == user_id)
+        )
+        result = await self.session.execute(stmt)
+        return result.all()
 
 
 def get_team_manager(session: Annotated[AsyncSession, Depends(get_session)]) -> TeamManager:
