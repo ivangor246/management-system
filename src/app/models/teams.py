@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from .users import User
 
 
-class UserRoles(Enum):
+class UserRoles(str, Enum):
     USER = 'u'
     MANAGER = 'm'
     ADMIN = 'a'

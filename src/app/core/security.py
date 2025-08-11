@@ -1,10 +1,20 @@
 from datetime import datetime, timezone
+from typing import Annotated
 
 import jwt
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from passlib.context import CryptContext
 from passlib.exc import UnknownHashError
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import config
+from app.core.database import get_session
+from app.models.teams import UserRoles, UserTeam
+from app.models.users import User
+
+http_bearer = HTTPBearer()
 
 pwd_context = CryptContext(
     schemes=['argon2'],
@@ -13,6 +23,81 @@ pwd_context = CryptContext(
     argon2__memory_cost=102400,
     argon2__parallelism=4,
 )
+
+
+async def get_request_user(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(http_bearer)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> User:
+    token = credentials.credentials
+
+    token_mixin = TokenMixin()
+    payload = token_mixin.validate_token(token)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Invalid or expired token',
+        )
+
+    email = token_mixin.get_email_form_payload(payload)
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Invalid token payload',
+        )
+
+    stmt = select(User).where(User.email == email)
+    result = await session.execute(stmt)
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='User not found',
+        )
+
+    return user
+
+
+async def require_admin(
+    team_id: int,
+    user: Annotated[User, Depends(get_request_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> User:
+    stmt = select(UserTeam).where(
+        UserTeam.user_id == user.id,
+        UserTeam.team_id == team_id,
+    )
+    result = await session.execute(stmt)
+    association = result.scalar_one_or_none()
+
+    if not association or association.role != UserRoles.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Admin access required',
+        )
+
+    return user
+
+
+async def require_manager(
+    team_id: int,
+    user: Annotated[User, Depends(get_request_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> User:
+    stmt = select(UserTeam).where(
+        UserTeam.user_id == user.id,
+        UserTeam.team_id == team_id,
+    )
+    result = await session.execute(stmt)
+    association = result.scalar_one_or_none()
+
+    if not association or association.role not in {UserRoles.MANAGER, UserRoles.ADMIN}:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Manager or admin access requires',
+        )
+
+    return user
 
 
 class HashingMixin:

@@ -1,8 +1,10 @@
+from pydantic import EmailStr
+
 from .base import BaseSchema
 
 
 class CredentialsSchema(BaseSchema):
-    email: str
+    email: EmailStr
     password: str
 
 

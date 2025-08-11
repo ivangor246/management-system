@@ -21,7 +21,7 @@ class UserCreateSchema(BaseCreateSchema):
 
 class UserCreateSuccessSchema(BaseResponseSchema):
     user_id: int
-    detail: str = 'User was successfully created'
+    detail: str = 'The user has been successfully created'
 
 
 class UserUpdateSchema(BaseUpdateSchema):
@@ -34,4 +34,4 @@ class UserUpdateSchema(BaseUpdateSchema):
 
 
 class UserUpdateSuccessSchema(BaseResponseSchema):
-    detail: str = 'User was successfully updated'
+    detail: str = 'The user has been successfully updated'
