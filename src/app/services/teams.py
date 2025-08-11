@@ -22,7 +22,7 @@ class TeamService:
             )
         return TeamCreateSuccessSchema(team_id=new_team.id)
 
-    async def get_users(self, team_id: int, auth_user: User) -> list[TeamMemberSchema]:
+    async def get_users(self, team_id: int) -> list[TeamMemberSchema]:
         users_and_roles = await self.manager.get_users(team_id)
 
         if not users_and_roles:
