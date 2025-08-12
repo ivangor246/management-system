@@ -6,9 +6,9 @@ from .base import BaseCreateSchema, BaseModelSchema, BaseResponseSchema, BaseUpd
 class UserSchema(BaseModelSchema):
     username: str
     email: EmailStr
-    hashed_password: str
     first_name: str
     last_name: str
+    is_admin: bool
 
 
 class UserCreateSchema(BaseCreateSchema):
@@ -25,7 +25,6 @@ class UserCreateSuccessSchema(BaseResponseSchema):
 
 
 class UserUpdateSchema(BaseUpdateSchema):
-    is_available: bool | None = None
     username: str | None = Field(None, min_length=2, max_length=100)
     email: EmailStr | None = None
     password: str | None = Field(None, min_length=6)

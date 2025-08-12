@@ -9,7 +9,7 @@ from app.core.database import get_session
 from app.core.security import HashingMixin
 from app.models.users import User
 from app.schemas.auth import CredentialsSchema
-from app.schemas.users import UserCreateSchema
+from app.schemas.users import UserCreateSchema, UserUpdateSchema
 
 
 class UserManager(HashingMixin):
@@ -45,6 +45,31 @@ class UserManager(HashingMixin):
             return False
 
         return True
+
+    async def update_user(self, user: User, user_data: UserUpdateSchema) -> User:
+        if user_data.username is not None:
+            user.username = user_data.username
+        if user_data.email is not None:
+            user.email = user_data.email
+        if user_data.password is not None:
+            user.hashed_password = self.hash_password(user_data.password)
+        if user_data.first_name is not None:
+            user.first_name = user_data.first_name
+        if user_data.last_name is not None:
+            user.last_name = user_data.last_name
+
+        try:
+            await self.session.commit()
+        except IntegrityError:
+            await self.session.rollback()
+            raise
+
+        await self.session.refresh(user)
+        return user
+
+    async def delete_user(self, user: User):
+        await self.session.delete(user)
+        await self.session.commit()
 
 
 def get_user_manager(session: Annotated[AsyncSession, Depends(get_session)]) -> UserManager:
