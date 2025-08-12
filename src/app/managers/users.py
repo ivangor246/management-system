@@ -23,6 +23,7 @@ class UserManager(HashingMixin):
             hashed_password=self.hash_password(user_data.password),
             first_name=user_data.first_name,
             last_name=user_data.last_name,
+            is_admin=False,
         )
         self.session.add(new_user)
 

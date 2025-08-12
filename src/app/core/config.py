@@ -20,6 +20,9 @@ class Config(BaseSettings):
     DB_USER: str = Field(alias='DB_USER')
     DB_PASS: str = Field(alias='DB_PASS')
 
+    ADMIN_NAME: str = Field(alias='ADMIN_NAME')
+    ADMIN_PASS: str = Field(alias='ADMIN_PASS')
+
     @property
     def DB_URL(self) -> str:
         return f'postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}'

@@ -12,5 +12,6 @@ class User(Base):
     hashed_password: Mapped[str_100]
     first_name: Mapped[str_100]
     last_name: Mapped[str_100 | None]
+    is_admin: Mapped[bool] = mapped_column(default=False)
 
     teams: Mapped[list['UserTeam']] = relationship(back_populates='user')
