@@ -51,3 +51,13 @@ async def create_user_team_association(
     team_manager: Annotated[User, Depends(require_manager)],
 ) -> UserTeamCreateSuccessSchema:
     return await service.create_user_team_association(user_team_data, team_id)
+
+
+@teams_router.delete('/{team_id:int}/users/{user_id:int}', status_code=status.HTTP_204_NO_CONTENT)
+async def remove_user_from_team(
+    service: Annotated[TeamService, Depends(get_team_service)],
+    user_id: int,
+    team_id: int,
+    team_manager: Annotated[User, Depends(require_manager)],
+):
+    await service.remove_user_from_team(user_id, team_id)

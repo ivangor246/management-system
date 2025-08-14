@@ -78,6 +78,23 @@ class TeamManager:
         result = await self.session.execute(stmt)
         return result.all()
 
+    async def delete_user_team_association(self, user_id: int, team_id: int) -> bool:
+        stmt = select(UserTeam).where(UserTeam.user_id == user_id, UserTeam.team_id == team_id)
+        result = await self.session.execute(stmt)
+        association = result.scalar_one_or_none()
+
+        if not association:
+            return False
+
+        await self.session.delete(association)
+        try:
+            await self.session.commit()
+        except Exception:
+            await self.session.rollback()
+            raise
+
+        return True
+
 
 def get_team_manager(session: Annotated[AsyncSession, Depends(get_session)]) -> TeamManager:
     return TeamManager(session=session)

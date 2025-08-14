@@ -72,6 +72,14 @@ class TeamService:
             )
         return UserTeamCreateSuccessSchema()
 
+    async def remove_user_from_team(self, user_id: int, team_id: int) -> None:
+        deleted = await self.manager.delete_user_team_association(user_id, team_id)
+        if not deleted:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail='The user is not a member of this team',
+            )
+
 
 def get_team_service(manager: Annotated[TeamManager, Depends(get_team_manager)]) -> TeamService:
     return TeamService(manager=manager)

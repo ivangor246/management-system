@@ -34,4 +34,3 @@ async def delete_user(
     auth_user: Annotated[User, Depends(get_request_user)],
 ):
     await service.delete_user(auth_user)
-    return
