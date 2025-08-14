@@ -5,7 +5,14 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.managers.teams import TeamManager, get_team_manager
 from app.models.users import User
-from app.schemas.teams import TeamByMemberSchema, TeamCreateSchema, TeamCreateSuccessSchema, TeamMemberSchema
+from app.schemas.teams import (
+    TeamByMemberSchema,
+    TeamCreateSchema,
+    TeamCreateSuccessSchema,
+    TeamMemberSchema,
+    UserTeamCreateSchema,
+    UserTeamCreateSuccessSchema,
+)
 
 
 class TeamService:
@@ -52,6 +59,18 @@ class TeamService:
             for team, role in teams_and_roles
         ]
         return teams
+
+    async def create_user_team_association(
+        self, user_team_data: UserTeamCreateSchema, team_id: int
+    ) -> UserTeamCreateSuccessSchema:
+        try:
+            await self.manager.assign_role(user_team_data.user_id, team_id, user_team_data.role)
+        except SQLAlchemyError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Something went wrong while adding the user-team association',
+            )
+        return UserTeamCreateSuccessSchema()
 
 
 def get_team_service(manager: Annotated[TeamManager, Depends(get_team_manager)]) -> TeamService:

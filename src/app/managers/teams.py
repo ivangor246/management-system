@@ -31,20 +31,27 @@ class TeamManager:
         return new_team
 
     async def assign_role(self, user_id: int, team_id: int, role: UserRoles) -> UserTeam:
-        new_user_team_association = UserTeam(
-            user_id=user_id,
-            team_id=team_id,
-            role=role,
-        )
-        self.session.add(new_user_team_association)
+        stmt = select(UserTeam).where(UserTeam.user_id == user_id, UserTeam.team_id == team_id)
+        existing_association = await self.session.scalar(stmt)
+
+        if existing_association:
+            existing_association.role = role
+            new_user_team_association = existing_association
+        else:
+            new_user_team_association = UserTeam(
+                user_id=user_id,
+                team_id=team_id,
+                role=role,
+            )
+            self.session.add(new_user_team_association)
 
         try:
             await self.session.commit()
+            await self.session.refresh(new_user_team_association)
         except:
             await self.session.rollback()
             raise
 
-        await self.session.refresh(new_user_team_association)
         return new_user_team_association
 
     async def get_users(self, team_id: int) -> list[tuple[User, UserRoles]]:
