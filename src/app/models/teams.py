@@ -28,8 +28,8 @@ class Team(Base):
 class UserTeam(Base):
     __tablename__ = 'user_team_association'
 
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
-    team_id: Mapped[int] = mapped_column(ForeignKey('teams.id'))
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'))
+    team_id: Mapped[int] = mapped_column(ForeignKey('teams.id', ondelete='CASCADE'))
 
     role: Mapped['UserRoles'] = mapped_column(
         SQLEnum(UserRoles, name='user_role_enum', native_enum=True),
