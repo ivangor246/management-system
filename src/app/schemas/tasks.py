@@ -1,7 +1,7 @@
 from datetime import date
 from enum import Enum
 
-from .base import BaseCreateSchema, BaseModelSchema, BaseResponseSchema
+from .base import BaseCreateSchema, BaseModelSchema, BaseResponseSchema, BaseUpdateSchema
 
 
 class TaskStatuses(str, Enum):
@@ -27,4 +27,15 @@ class TaskCreateSchema(BaseCreateSchema):
 
 class TaskCreateSuccessSchema(BaseResponseSchema):
     task_id: int
-    detail: str = 'The task was successfully created'
+    detail: str = 'The task has been successfully created'
+
+
+class TaskUpdateSchema(BaseUpdateSchema):
+    description: str | None
+    deadline: date | None
+    status: TaskStatuses | None
+    performer_id: int | None
+
+
+class TaskUpdateSuccessSchema(BaseResponseSchema):
+    detail: str = 'The task has been successfully updated'
