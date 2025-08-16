@@ -6,6 +6,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base, str_100
+from .tasks import Task
 
 if TYPE_CHECKING:
     from .users import User
@@ -23,6 +24,7 @@ class Team(Base):
     name: Mapped[str_100]
 
     members: Mapped[list['UserTeam']] = relationship(back_populates='team')
+    tasks: Mapped[list['Task']] = relationship(back_populates='team')
 
 
 class UserTeam(Base):

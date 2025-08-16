@@ -10,6 +10,7 @@ from .base import Base
 from .comments import Comment
 
 if TYPE_CHECKING:
+    from .teams import Team
     from .users import User
 
 
@@ -29,6 +30,8 @@ class Task(Base):
         default=TaskStatuses.OPEN,
     )
     performer_id: Mapped[int | None] = mapped_column(ForeignKey('users.id', ondelete='SET NULL'))
+    team_id: Mapped[int] = mapped_column(ForeignKey('teams.id', ondelete='CASCADE'))
 
     performer: Mapped[Optional['User']] = relationship(back_populates='tasks')
+    team: Mapped['Team'] = relationship(back_populates='tasks')
     comments: Mapped[list['Comment']] = relationship(back_populates='task')
