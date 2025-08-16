@@ -4,7 +4,7 @@ from fastapi import Depends, HTTPException, status
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.managers.tasks import TaskManager, get_task_manager
-from app.schemas.tasks import TaskCreateSchema, TaskCreateSuccessSchema
+from app.schemas.tasks import TaskCreateSchema, TaskCreateSuccessSchema, TaskSchema
 
 
 class TaskService:
@@ -20,6 +20,14 @@ class TaskService:
                 detail='Something went wrong when creating the task',
             )
         return TaskCreateSuccessSchema(task_id=new_task.id)
+
+    async def get_tasks_by_team(self, team_id: int) -> list[TaskSchema]:
+        tasks = await self.manager.get_tasks_by_team(team_id)
+        return [TaskSchema.model_validate(task) for task in tasks]
+
+    async def get_tasks_by_performer(self, performer_id: int) -> list[TaskSchema]:
+        tasks = await self.manager.get_tasks_by_performer(performer_id)
+        return [TaskSchema.model_validate(task) for task in tasks]
 
 
 def get_task_service(manager: Annotated[TaskManager, Depends(get_task_manager)]) -> TaskService:

@@ -1,7 +1,7 @@
 from datetime import date
 from enum import Enum
 
-from .base import BaseCreateSchema, BaseResponseSchema
+from .base import BaseCreateSchema, BaseModelSchema, BaseResponseSchema
 
 
 class TaskStatuses(str, Enum):
@@ -10,10 +10,18 @@ class TaskStatuses(str, Enum):
     COMPLETED = 'c'
 
 
-class TaskCreateSchema(BaseCreateSchema):
+class TaskSchema(BaseModelSchema):
     description: str
     deadline: date
     status: TaskStatuses
+    performer_id: int
+    team_id: int
+
+
+class TaskCreateSchema(BaseCreateSchema):
+    description: str
+    deadline: date
+    status: TaskStatuses = TaskStatuses.OPEN
     performer_id: int | None
 
 
