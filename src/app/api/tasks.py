@@ -13,10 +13,10 @@ from app.schemas.tasks import (
 )
 from app.services.tasks import TaskService, get_task_service
 
-tasks_router = APIRouter(prefix='/tasks', tags=['tasks'])
+tasks_router = APIRouter(prefix='/{team_id:int}/tasks', tags=['tasks'])
 
 
-@tasks_router.post('/teams/{team_id:int}', status_code=status.HTTP_201_CREATED)
+@tasks_router.post('', status_code=status.HTTP_201_CREATED)
 async def create_task(
     service: Annotated[TaskService, Depends(get_task_service)],
     task_data: TaskCreateSchema,
@@ -26,7 +26,7 @@ async def create_task(
     return await service.create_task(task_data, team_id)
 
 
-@tasks_router.get('/teams/{team_id:int}')
+@tasks_router.get('')
 async def get_tasks_by_team(
     service: Annotated[TaskService, Depends(get_task_service)],
     team_id: int,
@@ -35,15 +35,15 @@ async def get_tasks_by_team(
     return await service.get_tasks_by_team(team_id)
 
 
-@tasks_router.get('/my')
-async def get_my_tasks(
+@tasks_router.get('/mine')
+async def get_my_tasks_in_team(
     service: Annotated[TaskService, Depends(get_task_service)],
     auth_user: Annotated[User, Depends(get_request_user)],
 ) -> list[TaskSchema]:
     return await service.get_tasks_by_performer(auth_user.id)
 
 
-@tasks_router.put('/teams/{team_id:int}/{task_id:int}')
+@tasks_router.put('/{task_id:int}')
 async def update_task(
     service: Annotated[TaskService, Depends(get_task_service)],
     task_id: int,
@@ -54,7 +54,7 @@ async def update_task(
     return await service.update_task(task_id, task_data)
 
 
-@tasks_router.delete('/teams/{team_id:int}/{task_id:int}', status_code=status.HTTP_204_NO_CONTENT)
+@tasks_router.delete('/{task_id:int}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_task(
     service: Annotated[TaskService, Depends(get_task_service)],
     task_id: int,

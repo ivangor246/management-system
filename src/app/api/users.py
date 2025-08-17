@@ -10,7 +10,7 @@ from app.services.users import UserService, get_user_service
 users_router = APIRouter(prefix='/users', tags=['users'])
 
 
-@users_router.get('/')
+@users_router.get('/me')
 async def get_user_data(
     service: Annotated[UserService, Depends(get_user_service)],
     auth_user: Annotated[User, Depends(get_request_user)],
@@ -18,7 +18,7 @@ async def get_user_data(
     return await service.get_user_data(auth_user)
 
 
-@users_router.put('/')
+@users_router.put('/me')
 async def update_user(
     service: Annotated[UserService, Depends(get_user_service)],
     auth_user: Annotated[User, Depends(get_request_user)],
@@ -28,7 +28,7 @@ async def update_user(
     return response
 
 
-@users_router.delete('/', status_code=status.HTTP_204_NO_CONTENT)
+@users_router.delete('/me', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
     service: Annotated[UserService, Depends(get_user_service)],
     auth_user: Annotated[User, Depends(get_request_user)],
