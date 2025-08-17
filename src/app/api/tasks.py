@@ -38,9 +38,10 @@ async def get_tasks_by_team(
 @tasks_router.get('/mine')
 async def get_my_tasks_in_team(
     service: Annotated[TaskService, Depends(get_task_service)],
+    team_id: int,
     auth_user: Annotated[User, Depends(get_request_user)],
 ) -> list[TaskSchema]:
-    return await service.get_tasks_by_performer(auth_user.id)
+    return await service.get_tasks_by_performer(auth_user.id, team_id)
 
 
 @tasks_router.put('/{task_id:int}')

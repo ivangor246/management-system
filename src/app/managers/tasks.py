@@ -38,8 +38,8 @@ class TaskManager:
         result = await self.session.execute(stmt)
         return result.scalars()
 
-    async def get_tasks_by_performer(self, performer_id: int) -> list[Task]:
-        stmt = select(Task).where(Task.performer_id == performer_id)
+    async def get_tasks_by_performer(self, performer_id: int, team_id: int) -> list[Task]:
+        stmt = select(Task).where(Task.performer_id == performer_id, Task.team_id == team_id)
         result = await self.session.execute(stmt)
         return result.scalars()
 

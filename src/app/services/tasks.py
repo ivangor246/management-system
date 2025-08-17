@@ -31,8 +31,8 @@ class TaskService:
         tasks = await self.manager.get_tasks_by_team(team_id)
         return [TaskSchema.model_validate(task) for task in tasks]
 
-    async def get_tasks_by_performer(self, performer_id: int) -> list[TaskSchema]:
-        tasks = await self.manager.get_tasks_by_performer(performer_id)
+    async def get_tasks_by_performer(self, performer_id: int, team_id: int) -> list[TaskSchema]:
+        tasks = await self.manager.get_tasks_by_performer(performer_id, team_id)
         return [TaskSchema.model_validate(task) for task in tasks]
 
     async def update_task(self, task_id: int, task_data: TaskUpdateSchema) -> TaskUpdateSuccessSchema:
