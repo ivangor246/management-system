@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
@@ -79,6 +80,9 @@ class TeamService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail='The user is not a member of this team',
             )
+
+    async def get_avg_score(self, user_id: int, team_id: int, start_date: date, end_date: date) -> float:
+        return await self.manager.get_avg_score(user_id, team_id, start_date, end_date)
 
 
 def get_team_service(manager: Annotated[TeamManager, Depends(get_team_manager)]) -> TeamService:

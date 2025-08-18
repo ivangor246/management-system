@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
@@ -40,9 +41,20 @@ async def get_my_teams(
 async def get_team_members(
     service: Annotated[TeamService, Depends(get_team_service)],
     team_id: int,
-    team_member: Annotated[User, Depends(require_user)],
+    member: Annotated[User, Depends(require_user)],
 ) -> list[TeamMemberSchema]:
     return await service.get_users(team_id)
+
+
+@teams_router.get('/{team_id:int}/avg-score')
+async def get_avg_score(
+    service: Annotated[TeamService, Depends(get_team_service)],
+    start_date: date,
+    end_date: date,
+    team_id: int,
+    member: Annotated[User, Depends(require_user)],
+) -> float:
+    return await service.get_avg_score(member.id, team_id, start_date, end_date)
 
 
 @teams_router.post('/{team_id:int}/users')
@@ -50,7 +62,7 @@ async def add_team_member(
     service: Annotated[TeamService, Depends(get_team_service)],
     team_id: int,
     user_team_data: UserTeamCreateSchema,
-    team_manager: Annotated[User, Depends(require_manager)],
+    manager: Annotated[User, Depends(require_manager)],
 ) -> UserTeamCreateSuccessSchema:
     return await service.create_user_team_association(user_team_data, team_id)
 
@@ -60,7 +72,7 @@ async def remove_team_member(
     service: Annotated[TeamService, Depends(get_team_service)],
     user_id: int,
     team_id: int,
-    team_manager: Annotated[User, Depends(require_manager)],
+    manager: Annotated[User, Depends(require_manager)],
 ):
     await service.remove_user_from_team(user_id, team_id)
 

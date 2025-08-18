@@ -1,10 +1,12 @@
+from datetime import date
 from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
+from app.models.tasks import Task
 from app.models.teams import Team, UserTeam
 from app.models.users import User
 from app.schemas.teams import TeamCreateSchema, UserRoles
@@ -94,6 +96,18 @@ class TeamManager:
             raise
 
         return True
+
+    async def get_avg_score(self, user_id: int, team_id: int, start_date: date, end_date: date) -> float:
+        stmt = select(func.avg(Task.score)).where(
+            Task.performer_id == user_id,
+            Task.team_id == team_id,
+            Task.score.isnot(None),
+            Task.created_at >= start_date,
+            Task.created_at <= end_date,
+        )
+        result = await self.session.execute(stmt)
+        avg = result.scalar_one_or_none()
+        return round(float(avg), 2) if avg is not None else 0.0
 
 
 def get_team_manager(session: Annotated[AsyncSession, Depends(get_session)]) -> TeamManager:
