@@ -8,7 +8,7 @@ from app.core.security import HashingMixin
 from app.models.users import User
 
 from .auth import AdminAuth
-from .views import TeamAdmin, UserAdmin, UserTeamAdmin
+from .views import CommentAdmin, TaskAdmin, TeamAdmin, UserAdmin, UserTeamAdmin
 
 
 async def create_admin_if_not_exists():
@@ -37,3 +37,5 @@ def init_admin(app: FastAPI):
     admin.add_view(UserAdmin)
     admin.add_view(TeamAdmin)
     admin.add_view(UserTeamAdmin)
+    admin.add_view(TaskAdmin)
+    admin.add_view(CommentAdmin)
