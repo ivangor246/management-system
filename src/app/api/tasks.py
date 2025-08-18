@@ -13,10 +13,12 @@ from app.schemas.tasks import (
 )
 from app.services.tasks import TaskService, get_task_service
 
+from .comments import comments_router
+
 tasks_router = APIRouter(prefix='/{team_id:int}/tasks', tags=['tasks'])
 
 
-@tasks_router.post('', status_code=status.HTTP_201_CREATED)
+@tasks_router.post('/', status_code=status.HTTP_201_CREATED)
 async def create_task(
     service: Annotated[TaskService, Depends(get_task_service)],
     task_data: TaskCreateSchema,
@@ -26,7 +28,7 @@ async def create_task(
     return await service.create_task(task_data, team_id)
 
 
-@tasks_router.get('')
+@tasks_router.get('/')
 async def get_tasks_by_team(
     service: Annotated[TaskService, Depends(get_task_service)],
     team_id: int,
@@ -63,3 +65,6 @@ async def delete_task(
     member: Annotated[User, Depends(require_user)],
 ):
     await service.delete_task(task_id)
+
+
+tasks_router.include_router(comments_router)
