@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
 from app.models.tasks import Task
-from app.schemas.tasks import TaskCreateSchema, TaskUpdateSchema
+from app.schemas.tasks import TaskCreateSchema, TaskScoreSchema, TaskUpdateSchema
 
 
 class TaskManager:
@@ -21,6 +21,7 @@ class TaskManager:
             status=task_data.status,
             performer_id=task_data.performer_id,
             team_id=team_id,
+            score=None,
         )
         self.session.add(new_task)
 
@@ -85,6 +86,25 @@ class TaskManager:
             raise
 
         return True
+
+    async def update_task_score(self, task_id: int, task_score: TaskScoreSchema) -> Task | None:
+        stmt = select(Task).where(Task.id == task_id)
+        result = await self.session.execute(stmt)
+        task = result.scalar_one_or_none()
+
+        if not task:
+            return None
+
+        task.score = task_score.score
+
+        try:
+            await self.session.commit()
+            await self.session.refresh(task)
+        except SQLAlchemyError:
+            await self.session.rollback()
+            raise
+
+        return task
 
 
 def get_task_manager(session: Annotated[AsyncSession, Depends(get_session)]) -> TaskManager:

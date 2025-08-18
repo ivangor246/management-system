@@ -16,15 +16,16 @@ class TaskSchema(BaseModelSchema):
     description: str
     deadline: date
     status: TaskStatuses
-    performer_id: int
+    performer_id: int | None
     team_id: int
+    score: int | None
 
 
 class TaskCreateSchema(BaseCreateSchema):
     description: str
     deadline: date
     status: TaskStatuses = TaskStatuses.OPEN
-    performer_id: int | None = Field(ge=1)
+    performer_id: int | None = Field(ge=1, default=None)
 
 
 class TaskCreateSuccessSchema(BaseResponseSchema):
@@ -41,3 +42,11 @@ class TaskUpdateSchema(BaseUpdateSchema):
 
 class TaskUpdateSuccessSchema(BaseResponseSchema):
     detail: str = 'The task has been successfully updated'
+
+
+class TaskScoreSchema(BaseUpdateSchema):
+    score: int = Field(ge=1, le=5)
+
+
+class TaskScoreSuccessSchema(BaseResponseSchema):
+    detail: str = 'The task score has been successfully updated'

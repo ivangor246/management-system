@@ -8,6 +8,8 @@ from app.schemas.tasks import (
     TaskCreateSchema,
     TaskCreateSuccessSchema,
     TaskSchema,
+    TaskScoreSchema,
+    TaskScoreSuccessSchema,
     TaskUpdateSchema,
     TaskUpdateSuccessSchema,
 )
@@ -58,6 +60,22 @@ class TaskService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail='The task was not found',
             )
+
+    async def update_task_score(self, task_id: int, task_score: TaskScoreSchema) -> TaskUpdateSuccessSchema:
+        try:
+            task = await self.manager.update_task_score(task_id, task_score)
+            if not task:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail='The task was not found',
+                )
+        except SQLAlchemyError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Something went wrong when updating the task score',
+            )
+
+        return TaskScoreSuccessSchema()
 
 
 def get_task_service(manager: Annotated[TaskManager, Depends(get_task_manager)]) -> TaskService:

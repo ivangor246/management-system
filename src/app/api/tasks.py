@@ -8,6 +8,8 @@ from app.schemas.tasks import (
     TaskCreateSchema,
     TaskCreateSuccessSchema,
     TaskSchema,
+    TaskScoreSchema,
+    TaskScoreSuccessSchema,
     TaskUpdateSchema,
     TaskUpdateSuccessSchema,
 )
@@ -49,12 +51,23 @@ async def get_my_tasks_in_team(
 @tasks_router.put('/{task_id:int}')
 async def update_task(
     service: Annotated[TaskService, Depends(get_task_service)],
+    task_data: TaskUpdateSchema,
     task_id: int,
     team_id: int,
-    task_data: TaskUpdateSchema,
     member: Annotated[User, Depends(require_user)],
 ) -> TaskUpdateSuccessSchema:
     return await service.update_task(task_id, task_data)
+
+
+@tasks_router.put('/{task_id:int}/score')
+async def update_task_score(
+    service: Annotated[TaskService, Depends(get_task_service)],
+    task_score: TaskScoreSchema,
+    task_id: int,
+    team_id: int,
+    manager: Annotated[User, Depends(require_manager)],
+) -> TaskScoreSuccessSchema:
+    return await service.update_task_score(task_id, task_score)
 
 
 @tasks_router.delete('/{task_id:int}', status_code=status.HTTP_204_NO_CONTENT)
