@@ -1,6 +1,8 @@
 from datetime import date
 from enum import Enum
 
+from pydantic import Field
+
 from .base import BaseCreateSchema, BaseModelSchema, BaseResponseSchema, BaseUpdateSchema
 
 
@@ -22,7 +24,7 @@ class TaskCreateSchema(BaseCreateSchema):
     description: str
     deadline: date
     status: TaskStatuses = TaskStatuses.OPEN
-    performer_id: int | None
+    performer_id: int | None = Field(ge=1)
 
 
 class TaskCreateSuccessSchema(BaseResponseSchema):
