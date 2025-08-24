@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
-from app.core.security import get_request_user, require_manager, require_user
+from app.core.security import require_manager, require_user
 from app.models.users import User
 from app.schemas.tasks import (
     TaskCreateSchema,
@@ -43,9 +43,9 @@ async def get_tasks_by_team(
 async def get_my_tasks_in_team(
     service: Annotated[TaskService, Depends(get_task_service)],
     team_id: int,
-    auth_user: Annotated[User, Depends(get_request_user)],
+    member: Annotated[User, Depends(require_user)],
 ) -> list[TaskSchema]:
-    return await service.get_tasks_by_performer(auth_user.id, team_id)
+    return await service.get_tasks_by_performer(member.id, team_id)
 
 
 @tasks_router.put('/{task_id:int}')
