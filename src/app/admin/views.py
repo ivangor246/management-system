@@ -1,6 +1,7 @@
 from sqladmin import ModelView
 
 from app.models.comments import Comment
+from app.models.meetings import Meeting
 from app.models.tasks import Task
 from app.models.teams import Team, UserTeam
 from app.models.users import User
@@ -45,4 +46,14 @@ class CommentAdmin(ModelView, model=Comment):
         Comment.text,
         Comment.user_id,
         Comment.task_id,
+    ]
+
+
+class MeetingAdmin(ModelView, model=Meeting):
+    column_list = [
+        Meeting.name,
+        Meeting.date,
+        Meeting.time,
+        Meeting.team_id,
+        Meeting.users,
     ]
