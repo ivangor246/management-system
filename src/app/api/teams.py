@@ -15,6 +15,7 @@ from app.schemas.teams import (
 )
 from app.services.teams import TeamService, get_team_service
 
+from .meetings import meetings_router
 from .tasks import tasks_router
 
 teams_router = APIRouter(prefix='/teams', tags=['teams'])
@@ -78,3 +79,4 @@ async def remove_team_member(
 
 
 teams_router.include_router(tasks_router)
+teams_router.include_router(meetings_router)
