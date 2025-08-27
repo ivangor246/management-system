@@ -15,6 +15,7 @@ from app.schemas.teams import (
 )
 from app.services.teams import TeamService, get_team_service
 
+from .calendar import calendar_router
 from .meetings import meetings_router
 from .tasks import tasks_router
 
@@ -80,3 +81,4 @@ async def remove_team_member(
 
 teams_router.include_router(tasks_router)
 teams_router.include_router(meetings_router)
+teams_router.include_router(calendar_router)

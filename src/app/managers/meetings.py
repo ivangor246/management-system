@@ -29,7 +29,7 @@ class MeetingManager:
         return False
 
     async def create_meeting(self, meeting_data: MeetingCreateSchema, team_id: int) -> Meeting:
-        existing_meeting = self.__check_meeting(meeting_data, team_id)
+        existing_meeting = await self.__check_meeting(meeting_data, team_id)
         if existing_meeting:
             raise ValueError('A meeting already exists at the given date and time')
 
