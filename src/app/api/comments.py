@@ -18,6 +18,19 @@ async def create_comment(
     team_id: int,
     member: Annotated[User, Depends(require_user)],
 ) -> CommentCreateSuccessSchema:
+    """
+    Create a new comment for a specific task.
+
+    Args:
+        service (CommentService): Comment service dependency.
+        comment_data (CommentCreateSchema): Data for the new comment.
+        task_id (int): ID of the task to attach the comment to.
+        team_id (int): ID of the team the task belongs to.
+        member (User): Authenticated user creating the comment.
+
+    Returns:
+        CommentCreateSuccessSchema: The created comment's ID.
+    """
     return await service.create_comment(comment_data, member.id, task_id)
 
 
@@ -28,6 +41,18 @@ async def get_comments_by_task(
     team_id: int,
     member: Annotated[User, Depends(require_user)],
 ) -> list[CommentSchema]:
+    """
+    Retrieve all comments for a specific task.
+
+    Args:
+        service (CommentService): Comment service dependency.
+        task_id (int): ID of the task to fetch comments for.
+        team_id (int): ID of the team the task belongs to.
+        member (User): Authenticated user requesting comments.
+
+    Returns:
+        List[CommentSchema]: A list of comments for the specified task.
+    """
     return await service.get_comments_by_task(task_id)
 
 
@@ -39,4 +64,14 @@ async def delete_comment(
     team_id: int,
     member: Annotated[User, Depends(require_user)],
 ):
+    """
+    Delete a comment by its ID for a specific task.
+
+    Args:
+        service (CommentService): Comment service dependency.
+        comment_id (int): ID of the comment to delete.
+        task_id (int): ID of the task the comment belongs to.
+        team_id (int): ID of the team the task belongs to.
+        member (User): Authenticated user performing the deletion.
+    """
     await service.delete_comment(comment_id, task_id)

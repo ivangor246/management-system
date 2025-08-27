@@ -13,4 +13,17 @@ async def register_user(
     service: Annotated[RegisterService, Depends(get_register_service)],
     user_data: UserCreateSchema,
 ) -> UserCreateSuccessSchema:
+    """
+    Register a new user in the system.
+
+    Args:
+        service (RegisterService): Service responsible for user registration.
+        user_data (UserCreateSchema): User information required for registration.
+
+    Returns:
+        UserCreateSuccessSchema: Contains the ID of the newly created user.
+
+    Raises:
+        HTTPException: If a user with the same email or username already exists.
+    """
     return await service.register_user(user_data)

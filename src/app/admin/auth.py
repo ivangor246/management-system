@@ -1,3 +1,9 @@
+"""
+Admin authentication backend for SQLAdmin.
+
+Provides login, logout, and session-based authentication for admin users.
+"""
+
 from fastapi import Request
 from sqladmin.authentication import AuthenticationBackend
 from sqlalchemy import select
@@ -8,7 +14,20 @@ from app.models.users import User
 
 
 class AdminAuth(AuthenticationBackend):
+    """
+    SQLAdmin authentication backend for verifying admin users.
+    """
+
     async def login(self, request: Request) -> bool:
+        """
+        Authenticate an admin user using form data.
+
+        Args:
+            request (Request): FastAPI request containing form data with 'username' and 'password'.
+
+        Returns:
+            bool: True if authentication succeeds, False otherwise.
+        """
         form = await request.form()
         username = form.get('username')
         password = form.get('password')
@@ -25,8 +44,26 @@ class AdminAuth(AuthenticationBackend):
         return True
 
     async def logout(self, request: Request) -> bool:
+        """
+        Logout the currently authenticated admin user by clearing the session.
+
+        Args:
+            request (Request): FastAPI request.
+
+        Returns:
+            bool: Always True.
+        """
         request.session.clear()
         return True
 
     async def authenticate(self, request: Request) -> bool:
+        """
+        Check if the current request has an authenticated admin session.
+
+        Args:
+            request (Request): FastAPI request.
+
+        Returns:
+            bool: True if 'user_id' is in session, False otherwise.
+        """
         return 'user_id' in request.session

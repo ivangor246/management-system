@@ -15,6 +15,16 @@ async def get_user_data(
     service: Annotated[UserService, Depends(get_user_service)],
     auth_user: Annotated[User, Depends(get_request_user)],
 ) -> UserSchema:
+    """
+    Retrieve the current authenticated user's data.
+
+    Args:
+        service (UserService): Dependency injection of UserService.
+        auth_user (User): Current authenticated user.
+
+    Returns:
+        UserSchema: User details including username, email, and profile info.
+    """
     return await service.get_user_data(auth_user)
 
 
@@ -24,6 +34,17 @@ async def update_user(
     auth_user: Annotated[User, Depends(get_request_user)],
     user_data: UserUpdateSchema,
 ) -> UserUpdateSuccessSchema:
+    """
+    Update the current authenticated user's profile.
+
+    Args:
+        service (UserService): Dependency injection of UserService.
+        auth_user (User): Current authenticated user.
+        user_data (UserUpdateSchema): Updated user information.
+
+    Returns:
+        UserUpdateSuccessSchema: Success confirmation of the update.
+    """
     response = await service.update_user(auth_user, user_data)
     return response
 
@@ -33,4 +54,14 @@ async def delete_user(
     service: Annotated[UserService, Depends(get_user_service)],
     auth_user: Annotated[User, Depends(get_request_user)],
 ):
+    """
+    Delete the current authenticated user's account.
+
+    Args:
+        service (UserService): Dependency injection of UserService.
+        auth_user (User): Current authenticated user.
+
+    Returns:
+        None
+    """
     await service.delete_user(auth_user)

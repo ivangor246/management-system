@@ -13,4 +13,17 @@ async def authenticate(
     service: Annotated[AuthService, Depends(get_auth_service)],
     credentials: CredentialsSchema,
 ) -> TokenSchema:
+    """
+    Authenticate a user using email and password.
+
+    Args:
+        service (AuthService): The authentication service dependency.
+        credentials (CredentialsSchema): User credentials with email and password.
+
+    Returns:
+        TokenSchema: JWT access token if authentication is successful.
+
+    Raises:
+        HTTPException 401: If credentials are invalid.
+    """
     return await service.authenticate(credentials)

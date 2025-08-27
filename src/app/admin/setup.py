@@ -1,3 +1,10 @@
+"""
+Admin panel setup for FastAPI using SQLAdmin.
+
+This module initializes the admin interface, sets up default admin credentials,
+and registers admin views for the main models.
+"""
+
 from fastapi import FastAPI
 from sqladmin import Admin
 from sqlalchemy import select
@@ -12,6 +19,12 @@ from .views import CommentAdmin, MeetingAdmin, TaskAdmin, TeamAdmin, UserAdmin, 
 
 
 async def create_admin_if_not_exists():
+    """
+    Create a default admin user if one does not exist.
+
+    Uses credentials from the application configuration. The admin user
+    is assigned a default email and hashed password.
+    """
     async with session_factory() as session:
         stmt = select(User).where(User.username == config.ADMIN_NAME)
         result = await session.execute(stmt)
@@ -31,6 +44,12 @@ async def create_admin_if_not_exists():
 
 
 def init_admin(app: FastAPI):
+    """
+    Initialize the SQLAdmin interface and register model views.
+
+    Args:
+        app (FastAPI): The FastAPI application instance.
+    """
     authentication_backend = AdminAuth(secret_key=config.SECRET_KEY)
     admin = Admin(app, engine, authentication_backend=authentication_backend)
 

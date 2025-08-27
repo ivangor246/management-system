@@ -14,6 +14,12 @@ ROUTERS = [
 
 
 def get_root_router() -> APIRouter:
+    """
+    Creates the root API router and includes all sub-routers.
+
+    Returns:
+        APIRouter: Root router with all API routes included.
+    """
     root_router = APIRouter(prefix='/api')
 
     for router in ROUTERS:
