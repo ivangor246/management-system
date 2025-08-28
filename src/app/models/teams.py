@@ -24,9 +24,9 @@ class Team(Base):
 
     name: Mapped[str_100]
 
-    members: Mapped[list['UserTeam']] = relationship(back_populates='team')
-    tasks: Mapped[list['Task']] = relationship(back_populates='team')
-    meetings: Mapped[list['Meeting']] = relationship(back_populates='team')
+    members: Mapped[list['UserTeam']] = relationship(back_populates='team', cascade='all, delete-orphan')
+    tasks: Mapped[list['Task']] = relationship(back_populates='team', cascade='all, delete-orphan')
+    meetings: Mapped[list['Meeting']] = relationship(back_populates='team', cascade='all, delete-orphan')
 
 
 class UserTeam(Base):
@@ -41,4 +41,4 @@ class UserTeam(Base):
     )
 
     user: Mapped['User'] = relationship(back_populates='teams')
-    team: Mapped['Team'] = relationship(back_populates='members')
+    team: Mapped['Team'] = relationship(back_populates='members', passive_deletes=True)

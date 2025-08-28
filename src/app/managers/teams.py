@@ -111,7 +111,7 @@ class TeamManager:
             .where(UserTeam.team_id == team_id)
         )
         result = await self.session.execute(stmt)
-        return result.all()
+        return [(user, role) for user, role in result.all()]
 
     async def get_teams_by_user(self, user_id: int) -> list[tuple[Team, UserRoles]]:
         """
@@ -132,11 +132,12 @@ class TeamManager:
             .where(UserTeam.user_id == user_id)
         )
         result = await self.session.execute(stmt)
-        return result.all()
+        return [(team, role) for team, role in result.all()]
 
     async def delete_user_team_association(self, user_id: int, team_id: int) -> bool:
         """
         Remove a user's association with a team.
+        If no associations remain for the team, delete the team as well.
 
         Args:
             user_id (int): ID of the user.
@@ -153,6 +154,18 @@ class TeamManager:
             return False
 
         await self.session.delete(association)
+        await self.session.flush()
+
+        check_stmt = select(UserTeam).where(UserTeam.team_id == team_id)
+        remaining = await self.session.execute(check_stmt)
+        if not remaining.first():
+            team_stmt = select(Team).where(Team.id == team_id)
+            team_result = await self.session.execute(team_stmt)
+            team = team_result.scalar_one_or_none()
+            if team:
+                await self.session.delete(team)
+                await self.session.flush()
+
         try:
             await self.session.commit()
         except Exception:
@@ -179,8 +192,8 @@ class TeamManager:
             Task.performer_id == user_id,
             Task.team_id == team_id,
             Task.score.isnot(None),
-            Task.created_at >= start_date,
-            Task.created_at <= end_date,
+            Task.deadline >= start_date,
+            Task.deadline <= end_date,
         )
         result = await self.session.execute(stmt)
         avg = result.scalar_one_or_none()
