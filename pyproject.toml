@@ -28,6 +28,8 @@ passlib = {extras = ["argon2"], version = "^1.7.4"}
 pyjwt = "^2.10.1"
 sqladmin = "^0.21.0"
 itsdangerous = "^2.2.0"
+pytest = "^8.4.1"
+pytest-asyncio = "^1.1.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.12.7"
@@ -41,3 +43,12 @@ select = ["C", "E", "F", "W"]
 
 [tool.ruff.format]
 quote-style = "single"
+
+
+[tool.pytest.ini_options]
+pythonpath = [
+    "src"
+]
+testpaths = [
+    "tests"
+]
