@@ -30,5 +30,6 @@ class Meeting(Base):
         'User',
         secondary=user_meeting_association,
         back_populates='meetings',
+        lazy='selectin',
     )
     team: Mapped['Team'] = relationship(back_populates='meetings')

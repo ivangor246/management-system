@@ -140,7 +140,7 @@ class MeetingManager:
         Returns:
             Meeting | None: The updated meeting object, or None if not found.
         """
-        existing_meeting = self.__check_meeting(meeting_data, team_id)
+        existing_meeting = await self.__check_meeting(meeting_data, team_id)
         if existing_meeting:
             raise ValueError('A meeting already exists at the given date and time')
 
