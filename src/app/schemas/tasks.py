@@ -34,10 +34,10 @@ class TaskCreateSuccessSchema(BaseResponseSchema):
 
 
 class TaskUpdateSchema(BaseUpdateSchema):
-    description: str | None
-    deadline: date | None
-    status: TaskStatuses | None
-    performer_id: int | None
+    description: str | None = None
+    deadline: date | None = None
+    status: TaskStatuses | None = None
+    performer_id: int | None = None
 
 
 class TaskUpdateSuccessSchema(BaseResponseSchema):
