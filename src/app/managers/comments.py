@@ -67,7 +67,7 @@ class CommentManager:
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
-    async def delete_comment(self, comment_id: int, task_id: int) -> bool:
+    async def delete_comment(self, comment_id: int) -> bool:
         """Delete a comment by its ID and related task ID.
 
         Args:
@@ -80,7 +80,7 @@ class CommentManager:
         Raises:
             SQLAlchemyError: If an error occurs while committing the deletion.
         """
-        stmt = select(Comment).where(Comment.id == comment_id, Comment.task_id == task_id)
+        stmt = select(Comment).where(Comment.id == comment_id)
         result = await self.session.execute(stmt)
         comment = result.scalar_one_or_none()
 

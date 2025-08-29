@@ -74,4 +74,4 @@ async def delete_comment(
         team_id (int): ID of the team the task belongs to.
         member (User): Authenticated user performing the deletion.
     """
-    await service.delete_comment(comment_id, task_id)
+    await service.delete_comment(comment_id)

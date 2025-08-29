@@ -71,7 +71,7 @@ class CommentService:
         comments = await self.manager.get_comments_by_task(task_id)
         return [CommentSchema.model_validate(comment) for comment in comments]
 
-    async def delete_comment(self, comment_id: int, task_id: int) -> None:
+    async def delete_comment(self, comment_id: int) -> None:
         """
         Deletes a comment from a task.
 
@@ -82,7 +82,7 @@ class CommentService:
         Raises:
             HTTPException: If the comment does not exist.
         """
-        deleted = await self.manager.delete_comment(comment_id, task_id)
+        deleted = await self.manager.delete_comment(comment_id)
         if not deleted:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
