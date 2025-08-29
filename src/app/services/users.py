@@ -44,17 +44,7 @@ class UserService:
         Returns:
             UserSchema: Schema containing user's data.
         """
-        return UserSchema(
-            id=user.id,
-            username=user.username,
-            email=user.email,
-            first_name=user.first_name,
-            last_name=user.last_name,
-            is_admin=user.is_admin,
-            is_available=user.is_available,
-            created_at=user.created_at,
-            updated_at=user.updated_at,
-        )
+        return UserSchema.model_validate(user)
 
     async def update_user(self, user: User, user_data: UserUpdateSchema) -> UserUpdateSuccessSchema:
         """
