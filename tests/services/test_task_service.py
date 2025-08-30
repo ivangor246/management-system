@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date
 
 import pytest
 import pytest_asyncio
@@ -47,12 +47,6 @@ def team_data():
 async def team(session: AsyncSession, user: User, team_data) -> Team:
     manager = TeamManager(session)
     return await manager.create_team(team_data, user)
-
-
-@pytest.fixture
-def task_data():
-    today = date.today()
-    return TaskCreateSchema(description='Test task', deadline=today + timedelta(days=1), performer_id=None)
 
 
 @pytest.mark.asyncio
