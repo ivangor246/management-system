@@ -51,7 +51,7 @@ class MeetingManager:
             return True
         return False
 
-    async def create_meeting(self, meeting_data: MeetingCreateSchema, team_id: int) -> Meeting:
+    async def create_meeting(self, meeting_data: MeetingCreateSchema | MeetingUpdateSchema, team_id: int) -> Meeting:
         """Create a new meeting for a team.
 
         Args:
@@ -161,7 +161,7 @@ class MeetingManager:
             stmt = select(User).where(User.id.in_(meeting_data.member_ids))
             result = await self.session.execute(stmt)
             users = result.scalars().all()
-            meeting.users.extend(users)
+            meeting.users = users
 
         try:
             await self.session.commit()
