@@ -2,6 +2,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base, str_100
 from .comments import Comment
+from .evaluations import Evaluation
 from .meetings import Meeting, user_meeting_association
 from .tasks import Task
 from .teams import UserTeam
@@ -25,3 +26,4 @@ class User(Base):
         secondary=user_meeting_association,
         back_populates='users',
     )
+    evaluations: Mapped[list['Evaluation']] = relationship(back_populates='evaluator', passive_deletes=True)
