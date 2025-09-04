@@ -42,7 +42,7 @@ class Config(BaseSettings):
     TITLE: str = 'Business Management System'
     DOCS_URL: str = '/api/docs'
     OPENAPI_URL: str = '/api/docs.json'
-    DEBUG: bool = Field(alias='DEBUG') == 'True'
+    DEBUG: bool = Field(default=False, alias='DEBUG')
 
     SECRET_KEY: str = Field(alias='SECRET_KEY')
     TOKEN_ALGORITHM: str = 'HS256'
