@@ -1,15 +1,14 @@
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app.managers.tasks import TaskManager, get_task_manager
+from app.schemas.evaluations import EvaluationSchema, EvaluationSuccessSchema
 from app.schemas.tasks import (
     TaskCreateSchema,
     TaskCreateSuccessSchema,
     TaskSchema,
-    TaskScoreSchema,
-    TaskScoreSuccessSchema,
     TaskUpdateSchema,
     TaskUpdateSuccessSchema,
 )
@@ -77,7 +76,8 @@ class TaskService:
             team_id (int): ID of the team.
 
         Returns:
-            list[TaskSchema]: List of task schemas.
+            list[TaskSchema]: List of TaskSchema objects. Each task includes its evaluation value
+            if it exists.
         """
         tasks = await self.manager.get_tasks_by_team(team_id)
         return [TaskSchema.model_validate(task) for task in tasks]
@@ -91,7 +91,8 @@ class TaskService:
             team_id (int): ID of the team.
 
         Returns:
-            list[TaskSchema]: List of task schemas.
+            list[TaskSchema]: List of TaskSchema objects. Each task includes its evaluation value
+            if it exists.
         """
         tasks = await self.manager.get_tasks_by_performer(performer_id, team_id)
         return [TaskSchema.model_validate(task) for task in tasks]
@@ -142,34 +143,48 @@ class TaskService:
                 detail='The task was not found',
             )
 
-    async def update_task_score(self, task_id: int, task_score: TaskScoreSchema) -> TaskUpdateSuccessSchema:
+    async def update_task_evaluation(
+        self,
+        task_id: int,
+        evaluator_id: int,
+        evaluation_data: EvaluationSchema,
+    ) -> EvaluationSuccessSchema:
         """
-        Updates the score of a specific task.
+        Updates an existing evaluation of a task or creates it if it does not exist.
 
         Args:
             task_id (int): ID of the task.
-            task_score (TaskScoreSchema): Score data to update.
+            evaluator_id (int): ID of the evaluator performing the evaluation.
+            evaluation_data (EvaluationSchema): New evaluation data (value).
 
         Returns:
-            TaskScoreSuccessSchema: Confirmation schema.
+            EvaluationSuccessSchema: Confirmation schema indicating the evaluation was successfully
+            created or updated.
 
         Raises:
-            HTTPException: If the task is not found or an error occurs during score update.
+            HTTPException:
+                - 404 if the task does not exist.
+                - 400 if a unique evaluation constraint is violated or another database error occurs.
         """
         try:
-            task = await self.manager.update_task_score(task_id, task_score)
-            if not task:
+            evaluation = await self.manager.update_task_evaluation(task_id, evaluator_id, evaluation_data)
+            if not evaluation:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail='The task was not found',
                 )
+        except IntegrityError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='A unique evaluation for this task already exists',
+            )
         except SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Something went wrong when updating the task score',
+                detail='Something went wrong when updating the task evaluation',
             )
 
-        return TaskScoreSuccessSchema()
+        return EvaluationSuccessSchema()
 
 
 def get_task_service(manager: Annotated[TaskManager, Depends(get_task_manager)]) -> TaskService:

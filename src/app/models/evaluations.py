@@ -15,9 +15,9 @@ class Evaluation(Base):
 
     value: Mapped[int]
     evaluator_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'))
-    task_id: Mapped[int] = mapped_column(ForeignKey('tasks.id', ondelete='CASCADE'))
+    task_id: Mapped[int] = mapped_column(ForeignKey('tasks.id', ondelete='CASCADE'), unique=True)
 
     evaluator: Mapped['User'] = relationship(back_populates='evaluations')
-    task: Mapped['Task'] = relationship(back_populates='evaluations')
+    task: Mapped['Task'] = relationship(back_populates='evaluation')
 
     __table_args__ = (CheckConstraint('value BETWEEN 1 AND 5', name='check_value_between_1_5'),)

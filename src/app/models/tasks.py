@@ -36,4 +36,4 @@ class Task(Base):
     performer: Mapped[Optional['User']] = relationship(back_populates='tasks')
     team: Mapped['Team'] = relationship(back_populates='tasks')
     comments: Mapped[list['Comment']] = relationship(back_populates='task', passive_deletes=True)
-    evaluations: Mapped[list['Evaluation']] = relationship(back_populates='task', passive_deletes=True)
+    evaluation: Mapped[Optional['Evaluation']] = relationship(back_populates='task', passive_deletes=True)

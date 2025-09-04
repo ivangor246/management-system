@@ -4,12 +4,11 @@ from fastapi import APIRouter, Depends, status
 
 from app.core.security import require_manager, require_user
 from app.models.users import User
+from app.schemas.evaluations import EvaluationSchema, EvaluationSuccessSchema
 from app.schemas.tasks import (
     TaskCreateSchema,
     TaskCreateSuccessSchema,
     TaskSchema,
-    TaskScoreSchema,
-    TaskScoreSuccessSchema,
     TaskUpdateSchema,
     TaskUpdateSuccessSchema,
 )
@@ -106,28 +105,28 @@ async def update_task(
     return await service.update_task(task_id, task_data)
 
 
-@tasks_router.put('/{task_id:int}/score')
-async def update_task_score(
+@tasks_router.post('/{task_id:int}/evaluation')
+async def update_task_evaluation(
     service: Annotated[TaskService, Depends(get_task_service)],
-    task_score: TaskScoreSchema,
     task_id: int,
+    evaluation_data: EvaluationSchema,
     team_id: int,
     manager: Annotated[User, Depends(require_manager)],
-) -> TaskScoreSuccessSchema:
+) -> EvaluationSuccessSchema:
     """
-    Update the score of a task.
+    Update or create the evaluation of a task.
 
     Args:
         service (TaskService): Task service dependency.
-        task_score (TaskScoreSchema): New score data for the task.
         task_id (int): ID of the task to update.
+        evaluation_data (EvaluationSchema): New evaluation data.
         team_id (int): ID of the team.
-        manager (User): Team manager updating the score.
+        manager (User): Team manager performing the update.
 
     Returns:
-        TaskScoreSuccessSchema: Success response for the score update.
+        EvaluationSuccessSchema: Success response for the evaluation update.
     """
-    return await service.update_task_score(task_id, task_score)
+    return await service.update_task_evaluation(task_id, manager.id, evaluation_data)
 
 
 @tasks_router.delete('/{task_id:int}', status_code=status.HTTP_204_NO_CONTENT)

@@ -4,10 +4,13 @@ from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.database import get_session
+from app.models.evaluations import Evaluation
 from app.models.tasks import Task
-from app.schemas.tasks import TaskCreateSchema, TaskScoreSchema, TaskUpdateSchema
+from app.schemas.evaluations import EvaluationSchema
+from app.schemas.tasks import TaskCreateSchema, TaskUpdateSchema
 
 
 class TaskManager:
@@ -42,7 +45,6 @@ class TaskManager:
             status=task_data.status,
             performer_id=task_data.performer_id,
             team_id=team_id,
-            score=None,
         )
         self.session.add(new_task)
 
@@ -57,30 +59,35 @@ class TaskManager:
 
     async def get_tasks_by_team(self, team_id: int) -> list[Task]:
         """
-        Retrieve all tasks for a given team.
+        Retrieve all tasks for a given team, including associated evaluation objects.
 
         Args:
             team_id (int): ID of the team.
 
         Returns:
-            list[Task]: List of tasks associated with the given team.
+            list[Task]: List of Task objects. Each Task includes its evaluation if present.
         """
-        stmt = select(Task).where(Task.team_id == team_id)
+        stmt = select(Task).where(Task.team_id == team_id).options(selectinload(Task.evaluation))
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
     async def get_tasks_by_performer(self, performer_id: int, team_id: int) -> list[Task]:
         """
-        Retrieve all tasks for a given performer within a team.
+        Retrieve all tasks for a specific performer within a team, including evaluations.
 
         Args:
             performer_id (int): ID of the performer.
             team_id (int): ID of the team.
 
         Returns:
-            list[Task]: List of tasks assigned to the performer within the team.
+            list[Task]: List of Task objects assigned to the performer. Each Task includes
+            its evaluation if present.
         """
-        stmt = select(Task).where(Task.performer_id == performer_id, Task.team_id == team_id)
+        stmt = (
+            select(Task)
+            .where(Task.performer_id == performer_id, Task.team_id == team_id)
+            .options(selectinload(Task.evaluation))
+        )
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
@@ -152,37 +159,46 @@ class TaskManager:
 
         return True
 
-    async def update_task_score(self, task_id: int, task_score: TaskScoreSchema) -> Task | None:
+    async def update_task_evaluation(
+        self,
+        task_id: int,
+        evaluator_id: int,
+        evaluation_data: EvaluationSchema,
+    ) -> Evaluation | None:
         """
-        Update the score of a task.
+        Update or create the evaluation of a task.
 
         Args:
             task_id (int): ID of the task to update.
-            task_score (TaskScoreSchema): New score to assign.
+            evaluator_id (int): ID of the evaluator.
+            evaluation_data (EvaluationSchema): New evaluation data.
 
         Returns:
-            Task | None: Updated task object if found, otherwise None.
-
-        Raises:
-            SQLAlchemyError: If commit or refresh fails.
+            Evaluation | None: Updated or created evaluation object if successful, otherwise None.
         """
-        stmt = select(Task).where(Task.id == task_id)
+        stmt = select(Evaluation).where(Evaluation.task_id == task_id)
         result = await self.session.execute(stmt)
-        task = result.scalar_one_or_none()
+        evaluation = result.scalar_one_or_none()
 
-        if not task:
-            return None
-
-        task.score = task_score.score
+        if evaluation:
+            evaluation.value = evaluation_data.value
+            evaluation.evaluator_id = evaluator_id
+        else:
+            evaluation = Evaluation(
+                value=evaluation_data.value,
+                evaluator_id=evaluator_id,
+                task_id=task_id,
+            )
+            self.session.add(evaluation)
 
         try:
             await self.session.commit()
-            await self.session.refresh(task)
+            await self.session.refresh(evaluation)
         except SQLAlchemyError:
             await self.session.rollback()
             raise
 
-        return task
+        return evaluation
 
 
 def get_task_manager(session: Annotated[AsyncSession, Depends(get_session)]) -> TaskManager:
