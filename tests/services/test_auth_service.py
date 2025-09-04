@@ -48,7 +48,7 @@ class TestAuthService:
         assert len(response.access_token) > 0
 
         payload = service.validate_token(response.access_token)
-        assert service.get_email_form_payload(payload) == credentials.email
+        assert service.get_email_from_payload(payload) == credentials.email
 
     async def test_authenticate_with_wrong_email(
         self, session: AsyncSession, credentials: CredentialsSchema, user: User

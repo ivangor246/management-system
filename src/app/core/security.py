@@ -67,7 +67,7 @@ async def get_request_user(
     if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid or expired token')
 
-    email = token_mixin.get_email_form_payload(payload)
+    email = token_mixin.get_email_from_payload(payload)
     if not email:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid token payload')
 
@@ -209,7 +209,7 @@ class TokenMixin:
 
         return payload
 
-    def get_email_form_payload(self, payload: dict) -> str | None:
+    def get_email_from_payload(self, payload: dict) -> str | None:
         """
         Extract the email (subject) from the token payload.
 
