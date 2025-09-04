@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import Depends
 from sqlalchemy import func, select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
@@ -46,7 +47,7 @@ class TeamManager:
 
         try:
             await self.session.commit()
-        except:
+        except SQLAlchemyError:
             await self.session.rollback()
             raise
 
@@ -86,7 +87,7 @@ class TeamManager:
         try:
             await self.session.commit()
             await self.session.refresh(new_user_team_association)
-        except:
+        except SQLAlchemyError:
             await self.session.rollback()
             raise
 
@@ -168,7 +169,7 @@ class TeamManager:
 
         try:
             await self.session.commit()
-        except Exception:
+        except SQLAlchemyError:
             await self.session.rollback()
             raise
 

@@ -49,7 +49,7 @@ class TaskManager:
         try:
             await self.session.commit()
             await self.session.refresh(new_task)
-        except:
+        except SQLAlchemyError:
             await self.session.rollback()
             raise
 

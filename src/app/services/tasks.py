@@ -62,7 +62,7 @@ class TaskService:
         """
         try:
             new_task = await self.manager.create_task(task_data, team_id)
-        except Exception:
+        except SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail='Something went wrong when creating the task',
