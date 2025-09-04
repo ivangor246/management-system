@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
-from app.core.security import get_request_user, require_manager, require_user
+from app.core.security import get_request_user, require_manager, require_member
 from app.models.users import User
 from app.schemas.teams import (
     TeamByMemberSchema,
@@ -64,7 +64,7 @@ async def get_my_teams(
 async def get_team_members(
     service: Annotated[TeamService, Depends(get_team_service)],
     team_id: int,
-    member: Annotated[User, Depends(require_user)],
+    member: Annotated[User, Depends(require_member)],
 ) -> list[TeamMemberSchema]:
     """
     Retrieve all members of a specific team.
@@ -86,7 +86,7 @@ async def get_avg_score(
     start_date: date,
     end_date: date,
     team_id: int,
-    member: Annotated[User, Depends(require_user)],
+    member: Annotated[User, Depends(require_member)],
 ) -> float:
     """
     Retrieve the average score of a user in a team within a date range.

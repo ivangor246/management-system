@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
-from app.core.security import require_manager, require_user
+from app.core.security import require_manager, require_member
 from app.models.users import User
 from app.schemas.evaluations import EvaluationSchema, EvaluationSuccessSchema
 from app.schemas.tasks import (
@@ -45,7 +45,7 @@ async def create_task(
 async def get_tasks_by_team(
     service: Annotated[TaskService, Depends(get_task_service)],
     team_id: int,
-    member: Annotated[User, Depends(require_user)],
+    member: Annotated[User, Depends(require_member)],
 ) -> list[TaskSchema]:
     """
     Retrieve all tasks for a team.
@@ -65,7 +65,7 @@ async def get_tasks_by_team(
 async def get_my_tasks_in_team(
     service: Annotated[TaskService, Depends(get_task_service)],
     team_id: int,
-    member: Annotated[User, Depends(require_user)],
+    member: Annotated[User, Depends(require_member)],
 ) -> list[TaskSchema]:
     """
     Retrieve tasks assigned to the current user within a team.
@@ -87,7 +87,7 @@ async def update_task(
     task_data: TaskUpdateSchema,
     task_id: int,
     team_id: int,
-    member: Annotated[User, Depends(require_user)],
+    member: Annotated[User, Depends(require_member)],
 ) -> TaskUpdateSuccessSchema:
     """
     Update a task's details.
@@ -134,7 +134,7 @@ async def delete_task(
     service: Annotated[TaskService, Depends(get_task_service)],
     task_id: int,
     team_id: int,
-    member: Annotated[User, Depends(require_user)],
+    member: Annotated[User, Depends(require_member)],
 ):
     """
     Delete a task from a team.

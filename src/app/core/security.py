@@ -7,7 +7,7 @@ and JWT token generation/validation.
 
 Dependencies:
     get_request_user: Retrieves the currently authenticated user from the JWT token.
-    require_user: Ensures the user is a member of a given team.
+    require_member: Ensures the user is a member of a given team.
     require_admin: Ensures the user is an admin of a given team.
     require_manager: Ensures the user is a manager or admin of a given team.
 
@@ -81,7 +81,7 @@ async def get_request_user(
     return user
 
 
-async def require_user(
+async def require_member(
     team_id: int,
     user: Annotated[User, Depends(get_request_user)],
     session: Annotated[AsyncSession, Depends(get_session)],

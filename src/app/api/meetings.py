@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
-from app.core.security import require_manager, require_user
+from app.core.security import require_manager, require_member
 from app.models.users import User
 from app.schemas.meetings import (
     MeetingCreateSchema,
@@ -42,7 +42,7 @@ async def create_meeting(
 async def get_meetings_by_team(
     service: Annotated[MeetingService, Depends(get_meeting_service)],
     team_id: int,
-    member: Annotated[User, Depends(require_user)],
+    member: Annotated[User, Depends(require_member)],
 ) -> list[MeetingSchema]:
     """
     Get all meetings for a specific team.
@@ -62,7 +62,7 @@ async def get_meetings_by_team(
 async def get_my_meetings_in_team(
     service: Annotated[MeetingService, Depends(get_meeting_service)],
     team_id: int,
-    member: Annotated[User, Depends(require_user)],
+    member: Annotated[User, Depends(require_member)],
 ) -> list[MeetingSchema]:
     """
     Get meetings in a team where the authenticated user is a participant.

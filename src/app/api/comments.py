@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
-from app.core.security import require_user
+from app.core.security import require_member
 from app.models.users import User
 from app.schemas.comments import CommentCreateSchema, CommentCreateSuccessSchema, CommentSchema
 from app.services.comments import CommentService, get_comment_service
@@ -16,7 +16,7 @@ async def create_comment(
     comment_data: CommentCreateSchema,
     task_id: int,
     team_id: int,
-    member: Annotated[User, Depends(require_user)],
+    member: Annotated[User, Depends(require_member)],
 ) -> CommentCreateSuccessSchema:
     """
     Create a new comment for a specific task.
@@ -39,7 +39,7 @@ async def get_comments_by_task(
     service: Annotated[CommentService, Depends(get_comment_service)],
     task_id: int,
     team_id: int,
-    member: Annotated[User, Depends(require_user)],
+    member: Annotated[User, Depends(require_member)],
 ) -> list[CommentSchema]:
     """
     Retrieve all comments for a specific task.
@@ -62,7 +62,7 @@ async def delete_comment(
     comment_id: int,
     task_id: int,
     team_id: int,
-    member: Annotated[User, Depends(require_user)],
+    member: Annotated[User, Depends(require_member)],
 ):
     """
     Delete a comment by its ID for a specific task.

@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from app.core.security import require_user
+from app.core.security import require_member
 from app.models.users import User
 from app.schemas.calendar import CalendarDateSchema, CalendarMonthSchema
 from app.services.calendar import CalendarService, get_calendar_service
@@ -16,7 +16,7 @@ async def get_calendar_by_date(
     service: Annotated[CalendarService, Depends(get_calendar_service)],
     date: datetime.date,
     team_id: int,
-    member: Annotated[User, Depends(require_user)],
+    member: Annotated[User, Depends(require_member)],
 ) -> CalendarDateSchema:
     """
     Retrieve all events (tasks and meetings) for a specific team on a given date.
@@ -39,7 +39,7 @@ async def get_calendar_by_month(
     year: int,
     month: int,
     team_id: int,
-    member: Annotated[User, Depends(require_user)],
+    member: Annotated[User, Depends(require_member)],
 ) -> CalendarMonthSchema:
     """
     Retrieve all events (tasks and meetings) for a specific team within a given month.
