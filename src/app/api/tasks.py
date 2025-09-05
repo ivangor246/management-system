@@ -87,17 +87,17 @@ async def update_task(
     task_data: TaskUpdateSchema,
     task_id: int,
     team_id: int,
-    member: Annotated[User, Depends(require_member)],
+    manager: Annotated[User, Depends(require_manager)],
 ) -> TaskUpdateSuccessSchema:
     """
-    Update a task's details.
+    Update a task's details. Only for manager or admin.
 
     Args:
         service (TaskService): Task service dependency.
         task_data (TaskUpdateSchema): Updated task data.
         task_id (int): ID of the task to update.
         team_id (int): ID of the team.
-        member (User): User updating the task.
+        manager (User): Manager or admin updating the task.
 
     Returns:
         TaskUpdateSuccessSchema: Success response for the update.
@@ -134,16 +134,16 @@ async def delete_task(
     service: Annotated[TaskService, Depends(get_task_service)],
     task_id: int,
     team_id: int,
-    member: Annotated[User, Depends(require_member)],
+    manager: Annotated[User, Depends(require_manager)],
 ):
     """
-    Delete a task from a team.
+    Delete a task from a team.  Only for manager or admin.
 
     Args:
         service (TaskService): Task service dependency.
         task_id (int): ID of the task to delete.
         team_id (int): ID of the team.
-        member (User): User performing the deletion.
+        manager (User): Manager or admin updating the task.
 
     Returns:
         None
