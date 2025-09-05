@@ -9,18 +9,18 @@ from app.schemas.comments import CommentCreateSchema, CommentCreateSuccessSchema
 
 class CommentService:
     """
-    Service to handle operations related to comments, including creation, retrieval, and deletion.
+    Service layer for handling operations related to comments, including creation, retrieval, and deletion.
 
     Attributes:
-        manager (CommentManager): Manager responsible for comment database operations.
+        manager (CommentManager): Manager responsible for database operations with comments.
 
     Methods:
-        create_comment(comment_data: CommentCreateSchema, user_id: int, task_id: int) -> CommentCreateSuccessSchema:
+        create_comment(comment_data: CommentCreateSchema, user_id: int, task_id: int, team_id: int) -> CommentCreateSuccessSchema:
             Creates a new comment for a specific task by a user.
-        get_comments_by_task(task_id: int) -> list[CommentSchema]:
+        get_comments_by_task(task_id: int, team_id: int) -> list[CommentSchema]:
             Retrieves all comments associated with a specific task.
-        delete_comment(comment_id: int, task_id: int) -> None:
-            Deletes a comment from a task. Raises HTTPException if not found.
+        delete_comment(comment_id: int, task_id: int, team_id: int) -> None:
+            Deletes a comment from a task. Raises HTTPException if not found or access is denied.
     """
 
     def __init__(self, manager: CommentManager):
@@ -33,24 +33,35 @@ class CommentService:
         self.manager = manager
 
     async def create_comment(
-        self, comment_data: CommentCreateSchema, user_id: int, task_id: int
+        self, comment_data: CommentCreateSchema, user_id: int, task_id: int, team_id: int
     ) -> CommentCreateSuccessSchema:
         """
-        Creates a new comment for a task.
+        Create a new comment for a task.
 
         Args:
             comment_data (CommentCreateSchema): Data required to create the comment.
             user_id (int): ID of the user creating the comment.
             task_id (int): ID of the task the comment belongs to.
+            team_id (int): ID of the team the task belongs to.
 
         Returns:
             CommentCreateSuccessSchema: Schema containing the ID of the created comment.
 
         Raises:
-            HTTPException: If there is an error during comment creation.
+            HTTPException: If the task is not found, access is denied, or a database error occurs.
         """
         try:
-            new_comment = await self.manager.create_comment(comment_data, user_id, task_id)
+            new_comment = await self.manager.create_comment(comment_data, user_id, task_id, team_id)
+        except LookupError as e:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(e),
+            )
+        except PermissionError as e:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f'{e}',
+            )
         except SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -58,31 +69,58 @@ class CommentService:
             )
         return CommentCreateSuccessSchema(comment_id=new_comment.id)
 
-    async def get_comments_by_task(self, task_id: int) -> list[CommentSchema]:
+    async def get_comments_by_task(self, task_id: int, team_id: int) -> list[CommentSchema]:
         """
-        Retrieves all comments for a specific task.
+        Retrieve all comments for a specific task.
 
         Args:
             task_id (int): ID of the task to fetch comments for.
+            team_id (int): ID of the team the task belongs to.
 
         Returns:
             list[CommentSchema]: List of comment schemas.
+
+        Raises:
+            HTTPException: If the task is not found or access is denied.
         """
-        comments = await self.manager.get_comments_by_task(task_id)
+        try:
+            comments = await self.manager.get_comments_by_task(task_id, team_id)
+        except LookupError as e:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(e),
+            )
+        except PermissionError as e:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f'{e}',
+            )
         return [CommentSchema.model_validate(comment) for comment in comments]
 
-    async def delete_comment(self, comment_id: int) -> None:
+    async def delete_comment(self, comment_id: int, task_id: int, team_id: int) -> None:
         """
-        Deletes a comment from a task.
+        Delete a comment from a task.
 
         Args:
             comment_id (int): ID of the comment to delete.
             task_id (int): ID of the task the comment belongs to.
+            team_id (int): ID of the team the task belongs to.
 
         Raises:
-            HTTPException: If the comment does not exist.
+            HTTPException: If the comment does not exist or access is denied.
         """
-        deleted = await self.manager.delete_comment(comment_id)
+        try:
+            deleted = await self.manager.delete_comment(comment_id, task_id, team_id)
+        except LookupError as e:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(e),
+            )
+        except PermissionError as e:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f'{e}',
+            )
         if not deleted:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

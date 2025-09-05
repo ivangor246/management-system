@@ -31,7 +31,7 @@ async def create_comment(
     Returns:
         CommentCreateSuccessSchema: The created comment's ID.
     """
-    return await service.create_comment(comment_data, member.id, task_id)
+    return await service.create_comment(comment_data, member.id, task_id, team_id)
 
 
 @comments_router.get('/')
@@ -53,7 +53,7 @@ async def get_comments_by_task(
     Returns:
         List[CommentSchema]: A list of comments for the specified task.
     """
-    return await service.get_comments_by_task(task_id)
+    return await service.get_comments_by_task(task_id, team_id)
 
 
 @comments_router.delete('/{comment_id:int}', status_code=status.HTTP_204_NO_CONTENT)
@@ -74,4 +74,4 @@ async def delete_comment(
         team_id (int): ID of the team the task belongs to.
         member (User): Authenticated user performing the deletion.
     """
-    await service.delete_comment(comment_id)
+    await service.delete_comment(comment_id, task_id, team_id)
