@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.managers.teams import TeamManager
 from app.managers.users import UserManager
+from app.models.evaluations import Evaluation
 from app.models.tasks import Task, TaskStatuses
 from app.models.teams import Team, UserRoles, UserTeam
 from app.models.users import User
@@ -146,9 +147,16 @@ class TestTeamManager:
                 status=TaskStatuses.COMPLETED,
                 performer_id=users[0].id,
                 team_id=new_team.id,
-                score=score,
             )
             session.add(new_task)
+            await session.flush()
+
+            new_evaluation = Evaluation(
+                value=score,
+                evaluator_id=users[1].id,
+                task_id=new_task.id,
+            )
+            session.add(new_evaluation)
 
         start_date = date.today() - timedelta(days=5)
         end_date = date.today()

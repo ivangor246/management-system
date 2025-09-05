@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.managers.teams import TeamManager
 from app.managers.users import UserManager
+from app.models.evaluations import Evaluation
 from app.models.tasks import Task
 from app.models.teams import Team, UserTeam
 from app.models.users import User
@@ -152,21 +153,32 @@ class TestTeamService:
         team = await manager.create_team(team_data, user)
 
         today = date.today()
-        task1 = Task(
+        task_1 = Task(
             description='description1',
-            score=4,
             performer_id=user.id,
             team_id=team.id,
             deadline=today,
         )
-        task2 = Task(
+        task_2 = Task(
             description='description2',
-            score=2,
             performer_id=user.id,
             team_id=team.id,
             deadline=today + timedelta(days=1),
         )
-        session.add_all([task1, task2])
+        session.add_all([task_1, task_2])
+        await session.flush()
+
+        evaluation_1 = Evaluation(
+            value=4,
+            evaluator_id=user.id,
+            task_id=task_1.id,
+        )
+        evaluation_2 = Evaluation(
+            value=2,
+            evaluator_id=user.id,
+            task_id=task_2.id,
+        )
+        session.add_all([evaluation_1, evaluation_2])
         await session.commit()
 
         avg = await service.get_avg_score(user.id, team.id, today, today + timedelta(days=2))

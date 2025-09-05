@@ -7,6 +7,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
+from app.models.evaluations import Evaluation
 from app.models.tasks import Task
 from app.models.teams import Team, UserTeam
 from app.models.users import User
@@ -177,7 +178,7 @@ class TeamManager:
 
     async def get_avg_score(self, user_id: int, team_id: int, start_date: date, end_date: date) -> float:
         """
-        Calculate the average score of tasks performed by a user in a specific team
+        Calculate the average evaluation of tasks performed by a user in a specific team
         within a date range.
 
         Args:
@@ -187,14 +188,17 @@ class TeamManager:
             end_date (date): End date for the calculation.
 
         Returns:
-            float: The average score rounded to 2 decimal places, or 0.0 if no scores exist.
+            float: The average evaluation rounded to 2 decimal places, or 0.0 if no evaluation exists.
         """
-        stmt = select(func.avg(Task.score)).where(
-            Task.performer_id == user_id,
-            Task.team_id == team_id,
-            Task.score.isnot(None),
-            Task.deadline >= start_date,
-            Task.deadline <= end_date,
+        stmt = (
+            select(func.avg(Evaluation.value))
+            .join(Task, Task.id == Evaluation.task_id)
+            .where(
+                Task.performer_id == user_id,
+                Task.team_id == team_id,
+                Task.deadline >= start_date,
+                Task.deadline <= end_date,
+            )
         )
         result = await self.session.execute(stmt)
         avg = result.scalar_one_or_none()

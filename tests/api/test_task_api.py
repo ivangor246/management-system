@@ -12,7 +12,8 @@ from app.managers.tasks import TaskManager
 from app.managers.teams import TeamManager
 from app.managers.users import UserManager
 from app.models.users import User
-from app.schemas.tasks import TaskCreateSchema, TaskScoreSchema, TaskStatuses, TaskUpdateSchema
+from app.schemas.evaluations import EvaluationSchema
+from app.schemas.tasks import TaskCreateSchema, TaskStatuses, TaskUpdateSchema
 from app.schemas.teams import TeamCreateSchema, UserRoles
 from app.schemas.users import UserCreateSchema
 
@@ -123,24 +124,6 @@ class TestTasksAPI:
         assert response.status_code == status.HTTP_200_OK
         assert response.json()['detail'] == 'The task has been successfully updated'
 
-    async def test_update_task_score(self, app: FastAPI, session: AsyncSession, user_data):
-        manager_user, token = await self._create_user_and_token(session, user_data)
-        team = await self._create_team_with_manager(session, manager_user)
-        task_manager = TaskManager(session)
-        task = await task_manager.create_task(TaskCreateSchema(description='Task 4', deadline=date.today()), team.id)
-
-        score_data = TaskScoreSchema(score=5)
-
-        async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as ac:
-            response = await ac.put(
-                f'/api/teams/{team.id}/tasks/{task.id}/score',
-                json=score_data.model_dump(),
-                headers={'Authorization': f'Bearer {token}'},
-            )
-
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json()['detail'] == 'The task score has been successfully updated'
-
     async def test_delete_task(self, app: FastAPI, session: AsyncSession, user_data):
         manager_user, token = await self._create_user_and_token(session, user_data)
         team = await self._create_team_with_manager(session, manager_user)
@@ -154,3 +137,21 @@ class TestTasksAPI:
             )
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    async def test_update_task_evaluation(self, app: FastAPI, session: AsyncSession, user_data):
+        manager_user, token = await self._create_user_and_token(session, user_data)
+        team = await self._create_team_with_manager(session, manager_user)
+        task_manager = TaskManager(session)
+        task = await task_manager.create_task(TaskCreateSchema(description='Task 4', deadline=date.today()), team.id)
+
+        score_data = EvaluationSchema(value=5)
+
+        async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as ac:
+            response = await ac.post(
+                f'/api/teams/{team.id}/tasks/{task.id}/evaluation',
+                json=score_data.model_dump(),
+                headers={'Authorization': f'Bearer {token}'},
+            )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()['detail'] == 'The task evaluation has been successfully updated'

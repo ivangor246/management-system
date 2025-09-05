@@ -12,7 +12,8 @@ from app.managers.users import UserManager
 from app.models.tasks import Task, TaskStatuses
 from app.models.teams import Team, UserRoles
 from app.models.users import User
-from app.schemas.tasks import TaskCreateSchema, TaskScoreSchema, TaskUpdateSchema
+from app.schemas.evaluations import EvaluationSchema
+from app.schemas.tasks import TaskCreateSchema, TaskUpdateSchema
 from app.schemas.teams import TeamCreateSchema
 from app.schemas.users import UserCreateSchema
 
@@ -153,13 +154,13 @@ class TestTaskManager:
         tasks = await manager.get_tasks_by_team(team.id)
         assert len(tasks) == 0
 
-    async def test_update_task_score(
+    async def test_update_task_evaluation(
         self, session: AsyncSession, task_data: TaskCreateSchema, users: list[User], team: Team
     ):
         with pytest.raises(ValidationError):
-            TaskScoreSchema(score=6)
+            EvaluationSchema(value=6)
         with pytest.raises(ValidationError):
-            TaskScoreSchema(score=0)
+            EvaluationSchema(value=0)
 
         manager = TaskManager(session)
         task_data.performer_id = users[1].id
@@ -168,11 +169,19 @@ class TestTaskManager:
         new_task_1 = await manager.create_task(task_data, team.id)
         new_task_2 = await manager.create_task(task_data_2, team.id)
 
-        task_score_1 = TaskScoreSchema(score=1)
-        task_score_2 = TaskScoreSchema(score=5)
+        evaluation_data_1 = EvaluationSchema(value=1)
+        evaluation_data_2 = EvaluationSchema(value=5)
 
-        updated_task_1 = await manager.update_task_score(new_task_1.id, task_score_1)
-        updated_task_2 = await manager.update_task_score(new_task_2.id, task_score_2)
+        new_evaluation_1 = await manager.update_task_evaluation(new_task_1.id, users[0].id, evaluation_data_1)
+        new_evaluation_2 = await manager.update_task_evaluation(new_task_2.id, users[0].id, evaluation_data_2)
 
-        assert updated_task_1.score == task_score_1.score
-        assert updated_task_2.score == task_score_2.score
+        assert new_evaluation_1.value == evaluation_data_1.value
+        assert new_evaluation_2.value == evaluation_data_2.value
+        assert new_evaluation_1.evaluator_id == users[0].id
+        assert new_evaluation_1.task_id == new_task_1.id
+
+        evaluation_data_3 = EvaluationSchema(value=3)
+        new_evaluation_3 = await manager.update_task_evaluation(new_task_1.id, users[2].id, evaluation_data_3)
+
+        assert new_evaluation_3.value == evaluation_data_3.value
+        assert new_evaluation_3.evaluator_id == users[2].id

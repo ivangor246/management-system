@@ -176,6 +176,10 @@ class TaskManager:
         Returns:
             Evaluation | None: Updated or created evaluation object if successful, otherwise None.
         """
+        task = await self.session.get(Task, task_id)
+        if not task:
+            return None
+
         stmt = select(Evaluation).where(Evaluation.task_id == task_id)
         result = await self.session.execute(stmt)
         evaluation = result.scalar_one_or_none()
