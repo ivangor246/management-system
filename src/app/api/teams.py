@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
-from app.core.security import get_request_user, require_manager, require_member
+from app.core.security import get_request_user, require_admin, require_member
 from app.models.users import User
 from app.schemas.teams import (
     TeamByMemberSchema,
@@ -80,6 +80,50 @@ async def get_team_members(
     return await service.get_users(team_id)
 
 
+@teams_router.post('/{team_id:int}/users')
+async def add_team_member(
+    service: Annotated[TeamService, Depends(get_team_service)],
+    team_id: int,
+    user_team_data: UserTeamCreateSchema,
+    admin: Annotated[User, Depends(require_admin)],
+) -> UserTeamCreateSuccessSchema:
+    """
+    Add a user to a team with a specified role.
+
+    Args:
+        service (TeamService): Team service dependency.
+        team_id (int): ID of the team.
+        user_team_data (UserTeamCreateSchema): Data of the user and role to add.
+        admin (User): Admin adding the user to the team.
+
+    Returns:
+        UserTeamCreateSuccessSchema: Success response for the user-team association.
+    """
+    return await service.create_user_team_association(user_team_data, team_id)
+
+
+@teams_router.delete('/{team_id:int}/users/{user_id:int}', status_code=status.HTTP_204_NO_CONTENT)
+async def remove_team_member(
+    service: Annotated[TeamService, Depends(get_team_service)],
+    user_id: int,
+    team_id: int,
+    admin: Annotated[User, Depends(require_admin)],
+):
+    """
+    Remove a user from a team.
+
+    Args:
+        service (TeamService): Team service dependency.
+        user_id (int): ID of the user to remove.
+        team_id (int): ID of the team.
+        admin (User): Admin performing the removal.
+
+    Returns:
+        None
+    """
+    await service.remove_user_from_team(user_id, team_id)
+
+
 @teams_router.get('/{team_id:int}/avg-score')
 async def get_avg_score(
     service: Annotated[TeamService, Depends(get_team_service)],
@@ -102,50 +146,6 @@ async def get_avg_score(
         float: Average score of the user.
     """
     return await service.get_avg_score(member.id, team_id, start_date, end_date)
-
-
-@teams_router.post('/{team_id:int}/users')
-async def add_team_member(
-    service: Annotated[TeamService, Depends(get_team_service)],
-    team_id: int,
-    user_team_data: UserTeamCreateSchema,
-    manager: Annotated[User, Depends(require_manager)],
-) -> UserTeamCreateSuccessSchema:
-    """
-    Add a user to a team with a specified role.
-
-    Args:
-        service (TeamService): Team service dependency.
-        team_id (int): ID of the team.
-        user_team_data (UserTeamCreateSchema): Data of the user and role to add.
-        manager (User): Manager adding the user to the team.
-
-    Returns:
-        UserTeamCreateSuccessSchema: Success response for the user-team association.
-    """
-    return await service.create_user_team_association(user_team_data, team_id)
-
-
-@teams_router.delete('/{team_id:int}/users/{user_id:int}', status_code=status.HTTP_204_NO_CONTENT)
-async def remove_team_member(
-    service: Annotated[TeamService, Depends(get_team_service)],
-    user_id: int,
-    team_id: int,
-    manager: Annotated[User, Depends(require_manager)],
-):
-    """
-    Remove a user from a team.
-
-    Args:
-        service (TeamService): Team service dependency.
-        user_id (int): ID of the user to remove.
-        team_id (int): ID of the team.
-        manager (User): Manager performing the removal.
-
-    Returns:
-        None
-    """
-    await service.remove_user_from_team(user_id, team_id)
 
 
 teams_router.include_router(tasks_router)
