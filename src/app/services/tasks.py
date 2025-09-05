@@ -32,7 +32,7 @@ class TaskService:
             Updates an existing task.
         delete_task(task_id: int) -> None:
             Deletes a task by its ID.
-        update_task_score(task_id: int, task_score: TaskScoreSchema) -> TaskScoreSuccessSchema:
+        update_task_score(task_id: int, task_score: EvaluationSchema) -> EvaluationSuccessSchema:
             Updates the score of a specific task.
     """
 
