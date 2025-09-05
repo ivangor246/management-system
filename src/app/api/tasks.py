@@ -102,7 +102,7 @@ async def update_task(
     Returns:
         TaskUpdateSuccessSchema: Success response for the update.
     """
-    return await service.update_task(task_id, task_data)
+    return await service.update_task(task_data, task_id, team_id)
 
 
 @tasks_router.post('/{task_id:int}/evaluation')
@@ -126,7 +126,7 @@ async def update_task_evaluation(
     Returns:
         EvaluationSuccessSchema: Success response for the evaluation update.
     """
-    return await service.update_task_evaluation(task_id, manager.id, evaluation_data)
+    return await service.update_task_evaluation(task_id, team_id, manager.id, evaluation_data)
 
 
 @tasks_router.delete('/{task_id:int}', status_code=status.HTTP_204_NO_CONTENT)
@@ -148,7 +148,7 @@ async def delete_task(
     Returns:
         None
     """
-    await service.delete_task(task_id)
+    await service.delete_task(task_id, team_id)
 
 
 tasks_router.include_router(comments_router)

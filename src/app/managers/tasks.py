@@ -25,6 +25,28 @@ class TaskManager:
         """
         self.session = session
 
+    async def __check_task_in_team(self, task_id: int, team_id: int):
+        """
+        Check whether a task exists and belongs to the given team.
+
+        Args:
+            task_id (int): ID of the task to check.
+            team_id (int): ID of the team to validate against.
+
+        Raises:
+            LookupError: If the task is not found.
+            PermissionError: If the task does not belong to the given team.
+        """
+        stmt = select(Task).where(Task.id == task_id)
+        result = await self.session.execute(stmt)
+        task = result.scalar_one_or_none()
+
+        if not task:
+            raise LookupError('The task not found')
+
+        if task.team_id != team_id:
+            raise PermissionError('The task does not belong to the team')
+
     async def create_task(self, task_data: TaskCreateSchema, team_id: int) -> Task:
         """
         Create a new task in the database.
@@ -91,13 +113,14 @@ class TaskManager:
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
-    async def update_task(self, task_id: int, task_data: TaskUpdateSchema) -> Task | None:
+    async def update_task(self, task_data: TaskUpdateSchema, task_id: int, team_id: int) -> Task | None:
         """
         Update an existing task.
 
         Args:
-            task_id (int): ID of the task to update.
             task_data (TaskUpdateSchema): Fields to update.
+            task_id (int): ID of the task to update.
+            team_id (int): ID of the team the task belongs to.
 
         Returns:
             Task | None: Updated task object if found, otherwise None.
@@ -105,6 +128,8 @@ class TaskManager:
         Raises:
             SQLAlchemyError: If commit or refresh fails.
         """
+        self.__check_task_in_team(task_id, team_id)
+
         stmt = select(Task).where(Task.id == task_id)
         result = await self.session.execute(stmt)
         task = result.scalar_one_or_none()
@@ -130,12 +155,13 @@ class TaskManager:
 
         return task
 
-    async def delete_task(self, task_id: int) -> bool:
+    async def delete_task(self, task_id: int, team_id: int) -> bool:
         """
         Delete a task by its ID.
 
         Args:
             task_id (int): ID of the task to delete.
+            team_id (int): ID of the team the task belongs to.
 
         Returns:
             bool: True if task was deleted, False if task was not found.
@@ -143,6 +169,8 @@ class TaskManager:
         Raises:
             SQLAlchemyError: If commit fails.
         """
+        self.__check_task_in_team(task_id, team_id)
+
         stmt = select(Task).where(Task.id == task_id)
         result = await self.session.execute(stmt)
         task = result.scalar_one_or_none()
@@ -162,23 +190,23 @@ class TaskManager:
     async def update_task_evaluation(
         self,
         task_id: int,
+        team_id: int,
         evaluator_id: int,
         evaluation_data: EvaluationSchema,
-    ) -> Evaluation | None:
+    ) -> Evaluation:
         """
         Update or create the evaluation of a task.
 
         Args:
             task_id (int): ID of the task to update.
+            team_id (int): ID of the team the task belongs to.
             evaluator_id (int): ID of the evaluator.
             evaluation_data (EvaluationSchema): New evaluation data.
 
         Returns:
-            Evaluation | None: Updated or created evaluation object if successful, otherwise None.
+            Evaluation: Updated or created evaluation object if successful.
         """
-        task = await self.session.get(Task, task_id)
-        if not task:
-            return None
+        self.__check_task_in_team(task_id, team_id)
 
         stmt = select(Evaluation).where(Evaluation.task_id == task_id)
         result = await self.session.execute(stmt)
