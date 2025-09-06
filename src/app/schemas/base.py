@@ -9,7 +9,6 @@ class BaseSchema(BaseModel):
 
 class BaseModelSchema(BaseSchema):
     id: int
-    is_available: bool
     created_at: datetime
     updated_at: datetime
 
