@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import Depends
@@ -78,8 +79,12 @@ class TaskManager:
             Task: The newly created task object.
 
         Raises:
-            Exception: If commit or refresh fails.
+            ValueError: If deadline is in the past.
+            SQLAlchemyError: If commit or refresh fails.
         """
+        if task_data.deadline < datetime.now(timezone.utc):
+            raise ValueError('Deadline cannot be in the past')
+
         self.__check_user_in_team(task_data.performer_id, team_id)
 
         new_task = Task(
@@ -147,8 +152,13 @@ class TaskManager:
             Task | None: Updated task object if found, otherwise None.
 
         Raises:
+            ValueError: If deadline is in the past.
             SQLAlchemyError: If commit or refresh fails.
         """
+        if task_data.deadline is not None:
+            if task_data.deadline < datetime.now(timezone.utc):
+                raise ValueError('Deadline cannot be in the past')
+
         self.__check_task_in_team(task_id, team_id)
 
         stmt = select(Task).where(Task.id == task_id)

@@ -61,6 +61,11 @@ class TaskService:
         """
         try:
             new_task = await self.manager.create_task(task_data, team_id)
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e),
+            )
         except LookupError as e:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -188,13 +193,15 @@ class TaskService:
             created or updated.
 
         Raises:
-            HTTPException:
-                - 404 if the task does not exist.
-                - 403 if the task not in the team.
-                - 400 if a unique evaluation constraint is violated or another database error occurs.
+            HTTPException: If an error occurs during task updating.
         """
         try:
             await self.manager.update_task_evaluation(task_id, team_id, evaluator_id, evaluation_data)
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e),
+            )
         except LookupError as e:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
