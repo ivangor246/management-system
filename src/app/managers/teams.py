@@ -1,4 +1,3 @@
-from datetime import date
 from typing import Annotated
 
 from fastapi import Depends
@@ -19,7 +18,7 @@ class TeamManager:
     Manager class for handling operations related to Teams, Users, and their associations.
 
     This class provides methods to create teams, assign user roles,
-    fetch users by team, fetch teams by user, calculate average scores,
+    fetch users by team, fetch teams by user, calculate average evaluations,
     and manage team-user associations.
     """
 
@@ -176,7 +175,7 @@ class TeamManager:
 
         return True
 
-    async def get_avg_score(self, user_id: int, team_id: int, start_date: date, end_date: date) -> float:
+    async def get_avg_evaluation(self, user_id: int, team_id: int) -> float:
         """
         Calculate the average evaluation of tasks performed by a user in a specific team
         within a date range.
@@ -184,8 +183,6 @@ class TeamManager:
         Args:
             user_id (int): ID of the user.
             team_id (int): ID of the team.
-            start_date (date): Start date for the calculation.
-            end_date (date): End date for the calculation.
 
         Returns:
             float: The average evaluation rounded to 2 decimal places, or 0.0 if no evaluation exists.
@@ -196,8 +193,6 @@ class TeamManager:
             .where(
                 Task.performer_id == user_id,
                 Task.team_id == team_id,
-                Task.deadline >= start_date,
-                Task.deadline <= end_date,
             )
         )
         result = await self.session.execute(stmt)

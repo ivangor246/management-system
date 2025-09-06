@@ -32,8 +32,8 @@ class TaskService:
             Updates an existing task.
         delete_task(task_id: int) -> None:
             Deletes a task by its ID.
-        update_task_score(task_id: int, task_score: EvaluationSchema) -> EvaluationSuccessSchema:
-            Updates the score of a specific task.
+        update_task_evaluation(task_id: int, task_evaluation: EvaluationSchema) -> EvaluationSuccessSchema:
+            Updates the evaluation of a specific task.
     """
 
     def __init__(self, manager: TaskManager):

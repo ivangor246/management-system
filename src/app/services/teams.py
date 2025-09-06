@@ -1,4 +1,3 @@
-from datetime import date
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
@@ -34,8 +33,8 @@ class TeamService:
             Assigns a user to a team with a specific role.
         remove_user_from_team(user_id: int, team_id: int) -> None:
             Removes a user from a team.
-        get_avg_score(user_id: int, team_id: int, start_date: date, end_date: date) -> float:
-            Calculates the average score of a user in a team over a given date range.
+        get_avg_evaluation(user_id: int, team_id: int, start_date: date, end_date: date) -> float:
+            Calculates the average evaluation of a user in a team over a given date range.
     """
 
     def __init__(self, manager: TeamManager):
@@ -165,20 +164,18 @@ class TeamService:
                 detail='The user is not a member of this team',
             )
 
-    async def get_avg_score(self, user_id: int, team_id: int, start_date: date, end_date: date) -> float:
+    async def get_avg_evaluation(self, user_id: int, team_id: int) -> float:
         """
-        Calculates the average score of a user in a team over a given date range.
+        Calculates the average evaluation of a user in a team over a given date range.
 
         Args:
             user_id (int): ID of the user.
             team_id (int): ID of the team.
-            start_date (date): Start date of the period.
-            end_date (date): End date of the period.
 
         Returns:
-            float: Average score, rounded to 2 decimal places.
+            float: Average evaluation, rounded to 2 decimal places.
         """
-        return await self.manager.get_avg_score(user_id, team_id, start_date, end_date)
+        return await self.manager.get_avg_evaluation(user_id, team_id)
 
 
 def get_team_service(manager: Annotated[TeamManager, Depends(get_team_manager)]) -> TeamService:

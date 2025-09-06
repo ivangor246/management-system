@@ -146,7 +146,7 @@ class TestTeamService:
             await service.remove_user_from_team(user_id=1, team_id=999)
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
 
-    async def test_get_avg_score(self, session: AsyncSession, user: User, team_data: TeamCreateSchema):
+    async def test_get_avg_evaluation(self, session: AsyncSession, user: User, team_data: TeamCreateSchema):
         manager = TeamManager(session)
         service = TeamService(manager)
 
@@ -181,5 +181,5 @@ class TestTeamService:
         session.add_all([evaluation_1, evaluation_2])
         await session.commit()
 
-        avg = await service.get_avg_score(user.id, team.id, today, today + timedelta(days=2))
+        avg = await service.get_avg_evaluation(user.id, team.id, today, today + timedelta(days=2))
         assert avg == 3.0

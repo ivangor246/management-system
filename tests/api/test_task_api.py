@@ -144,12 +144,12 @@ class TestTasksAPI:
         task_manager = TaskManager(session)
         task = await task_manager.create_task(TaskCreateSchema(description='Task 4', deadline=date.today()), team.id)
 
-        score_data = EvaluationSchema(value=5)
+        evaluation_data = EvaluationSchema(value=5)
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as ac:
             response = await ac.post(
                 f'/api/teams/{team.id}/tasks/{task.id}/evaluation',
-                json=score_data.model_dump(),
+                json=evaluation_data.model_dump(),
                 headers={'Authorization': f'Bearer {token}'},
             )
 

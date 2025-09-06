@@ -1,4 +1,3 @@
-from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
@@ -124,28 +123,24 @@ async def remove_team_member(
     await service.remove_user_from_team(user_id, team_id)
 
 
-@teams_router.get('/{team_id:int}/avg-score')
-async def get_avg_score(
+@teams_router.get('/{team_id:int}/avg-evaluation')
+async def get_avg_evaluation(
     service: Annotated[TeamService, Depends(get_team_service)],
-    start_date: date,
-    end_date: date,
     team_id: int,
     member: Annotated[User, Depends(require_member)],
 ) -> float:
     """
-    Retrieve the average score of a user in a team within a date range.
+    Retrieve the average evaluation of a user in a team within a date range.
 
     Args:
         service (TeamService): Team service dependency.
-        start_date (date): Start date of the range.
-        end_date (date): End date of the range.
         team_id (int): ID of the team.
-        member (User): User requesting the average score.
+        member (User): User requesting the average evaluation.
 
     Returns:
-        float: Average score of the user.
+        float: Average evaluation of the user.
     """
-    return await service.get_avg_score(member.id, team_id, start_date, end_date)
+    return await service.get_avg_evaluation(member.id, team_id)
 
 
 teams_router.include_router(tasks_router)

@@ -168,7 +168,7 @@ class TestTaskService:
         service = TaskService(manager)
 
         task = Task(
-            description='Task with score',
+            description='Task with evaluation',
             deadline=date.today(),
             performer_id=user.id,
             team_id=team.id,
