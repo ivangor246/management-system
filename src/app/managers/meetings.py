@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.database import get_session
 from app.models.meetings import Meeting
+from app.models.teams import UserTeam
 from app.models.users import User
 from app.schemas.meetings import MeetingCreateSchema, MeetingUpdateSchema
 
@@ -73,6 +74,24 @@ class MeetingManager:
         if meeting.team_id != team_id:
             raise PermissionError('The meeting does not belong to the team')
 
+    async def __check_user_in_team(self, user_id: int, team_id: int):
+        """
+        Check whether a task exists and belongs to the given team.
+
+        Args:
+            user_id (int): ID of the user to check.
+            team_id (int): ID of the team to validate against.
+
+        Raises:
+            LookupError: If the user is not found.
+        """
+        stmt = select(UserTeam).where(UserTeam.user_id == user_id, UserTeam.team_id == team_id)
+        result = await self.session.execute(stmt)
+        user = result.scalar_one_or_none()
+
+        if not user:
+            raise LookupError('The user not found in this team')
+
     async def create_meeting(self, meeting_data: MeetingCreateSchema | MeetingUpdateSchema, team_id: int) -> Meeting:
         """Create a new meeting for a team.
 
@@ -99,6 +118,9 @@ class MeetingManager:
         )
 
         if meeting_data.member_ids:
+            for member_id in meeting_data.member_ids:
+                self.__check_user_in_team(member_id, team_id)
+
             stmt = select(User).where(User.id.in_(meeting_data.member_ids))
             result = await self.session.execute(stmt)
             users = result.scalars().all()
@@ -182,6 +204,8 @@ class MeetingManager:
         if meeting_data.time is not None:
             meeting.time = meeting_data.time
         if meeting_data.member_ids is not None:
+            for member_id in meeting_data.member_ids:
+                self.__check_user_in_team(member_id, team_id)
             stmt = select(User).where(User.id.in_(meeting_data.member_ids))
             result = await self.session.execute(stmt)
             users = result.scalars().all()

@@ -58,6 +58,11 @@ class MeetingService:
         """
         try:
             new_meeting = await self.manager.create_meeting(meeting_data, team_id)
+        except LookupError as e:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(e),
+            )
         except ValueError as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

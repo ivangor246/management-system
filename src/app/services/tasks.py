@@ -61,6 +61,11 @@ class TaskService:
         """
         try:
             new_task = await self.manager.create_task(task_data, team_id)
+        except LookupError as e:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(e),
+            )
         except SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

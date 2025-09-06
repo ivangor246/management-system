@@ -9,6 +9,7 @@ from sqlalchemy.orm import selectinload
 from app.core.database import get_session
 from app.models.evaluations import Evaluation
 from app.models.tasks import Task
+from app.models.teams import UserTeam
 from app.schemas.evaluations import EvaluationSchema
 from app.schemas.tasks import TaskCreateSchema, TaskUpdateSchema
 
@@ -47,6 +48,24 @@ class TaskManager:
         if task.team_id != team_id:
             raise PermissionError('The task does not belong to the team')
 
+    async def __check_user_in_team(self, user_id: int, team_id: int):
+        """
+        Check whether a task exists and belongs to the given team.
+
+        Args:
+            user_id (int): ID of the user to check.
+            team_id (int): ID of the team to validate against.
+
+        Raises:
+            LookupError: If the user is not found.
+        """
+        stmt = select(UserTeam).where(UserTeam.user_id == user_id, UserTeam.team_id == team_id)
+        result = await self.session.execute(stmt)
+        user = result.scalar_one_or_none()
+
+        if not user:
+            raise LookupError('The user not found in this team')
+
     async def create_task(self, task_data: TaskCreateSchema, team_id: int) -> Task:
         """
         Create a new task in the database.
@@ -61,6 +80,8 @@ class TaskManager:
         Raises:
             Exception: If commit or refresh fails.
         """
+        self.__check_user_in_team(task_data.performer_id, team_id)
+
         new_task = Task(
             description=task_data.description,
             deadline=task_data.deadline,
@@ -144,6 +165,7 @@ class TaskManager:
         if task_data.status is not None:
             task.status = task_data.status
         if task_data.performer_id is not None:
+            self.__check_user_in_team(task_data.performer_id, team_id)
             task.performer_id = task_data.performer_id
 
         try:
