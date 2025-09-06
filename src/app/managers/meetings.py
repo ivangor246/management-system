@@ -125,7 +125,7 @@ class MeetingManager:
 
         if meeting_data.member_ids:
             for member_id in meeting_data.member_ids:
-                self.__check_user_in_team(member_id, team_id)
+                await self.__check_user_in_team(member_id, team_id)
 
             stmt = select(User).where(User.id.in_(meeting_data.member_ids))
             result = await self.session.execute(stmt)
@@ -210,7 +210,7 @@ class MeetingManager:
             meeting.time = meeting_data.time
         if meeting_data.member_ids is not None:
             for member_id in meeting_data.member_ids:
-                self.__check_user_in_team(member_id, team_id)
+                await self.__check_user_in_team(member_id, team_id)
             stmt = select(User).where(User.id.in_(meeting_data.member_ids))
             result = await self.session.execute(stmt)
             users = result.scalars().all()

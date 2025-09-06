@@ -69,7 +69,7 @@ class CommentManager:
             PermissionError: If the task does not belong to the given team.
             SQLAlchemyError: If an error occurs while committing to the database.
         """
-        self.__check_task_in_team(task_id, team_id)
+        await self.__check_task_in_team(task_id, team_id)
 
         new_comment = Comment(
             text=comment_data.text,
@@ -102,7 +102,7 @@ class CommentManager:
             LookupError: If the task is not found.
             PermissionError: If the task does not belong to the given team.
         """
-        self.__check_task_in_team(task_id, team_id)
+        await self.__check_task_in_team(task_id, team_id)
 
         stmt = select(Comment).where(Comment.task_id == task_id).order_by(Comment.created_at)
         result = await self.session.execute(stmt)
@@ -125,7 +125,7 @@ class CommentManager:
             PermissionError: If the task does not belong to the given team.
             SQLAlchemyError: If an error occurs while committing the deletion.
         """
-        self.__check_task_in_team(task_id, team_id)
+        await self.__check_task_in_team(task_id, team_id)
 
         stmt = select(Comment).where(Comment.id == comment_id)
         result = await self.session.execute(stmt)

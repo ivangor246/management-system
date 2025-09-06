@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Annotated
 
 from fastapi import Depends
@@ -26,6 +26,10 @@ class TaskManager:
             session (AsyncSession): SQLAlchemy asynchronous session for database interaction.
         """
         self.session = session
+
+    def __check_deadline(self, deadline: date):
+        if deadline < datetime.now(timezone.utc).date():
+            raise ValueError('Deadline cannot be in the past')
 
     async def __check_task_in_team(self, task_id: int, team_id: int):
         """
@@ -82,10 +86,9 @@ class TaskManager:
             ValueError: If deadline is in the past.
             SQLAlchemyError: If commit or refresh fails.
         """
-        if task_data.deadline < datetime.now(timezone.utc):
-            raise ValueError('Deadline cannot be in the past')
+        self.__check_deadline(task_data.deadline)
 
-        self.__check_user_in_team(task_data.performer_id, team_id)
+        await self.__check_user_in_team(task_data.performer_id, team_id)
 
         new_task = Task(
             description=task_data.description,
@@ -156,10 +159,9 @@ class TaskManager:
             SQLAlchemyError: If commit or refresh fails.
         """
         if task_data.deadline is not None:
-            if task_data.deadline < datetime.now(timezone.utc):
-                raise ValueError('Deadline cannot be in the past')
+            self.__check_deadline(task_data.deadline)
 
-        self.__check_task_in_team(task_id, team_id)
+        await self.__check_task_in_team(task_id, team_id)
 
         stmt = select(Task).where(Task.id == task_id)
         result = await self.session.execute(stmt)
@@ -175,7 +177,7 @@ class TaskManager:
         if task_data.status is not None:
             task.status = task_data.status
         if task_data.performer_id is not None:
-            self.__check_user_in_team(task_data.performer_id, team_id)
+            await self.__check_user_in_team(task_data.performer_id, team_id)
             task.performer_id = task_data.performer_id
 
         try:
@@ -201,7 +203,7 @@ class TaskManager:
         Raises:
             SQLAlchemyError: If commit fails.
         """
-        self.__check_task_in_team(task_id, team_id)
+        await self.__check_task_in_team(task_id, team_id)
 
         stmt = select(Task).where(Task.id == task_id)
         result = await self.session.execute(stmt)
@@ -238,7 +240,7 @@ class TaskManager:
         Returns:
             Evaluation: Updated or created evaluation object if successful.
         """
-        self.__check_task_in_team(task_id, team_id)
+        await self.__check_task_in_team(task_id, team_id)
 
         stmt = select(Evaluation).where(Evaluation.task_id == task_id)
         result = await self.session.execute(stmt)
