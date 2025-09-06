@@ -32,7 +32,11 @@ class MeetingManager:
         """
         self.session = session
 
-    def __check_meeting_datetime(self, meeting_date: date, meeting_time: time):
+    def __check_ids_is_not_empty(self, ids: list[int]) -> None:
+        if not ids:
+            raise ValueError('Meeting must include at least one member')
+
+    def __check_meeting_datetime(self, meeting_date: date, meeting_time: time) -> None:
         meeting_datetime = datetime.combine(meeting_date, meeting_time, tzinfo=timezone.utc)
         if meeting_datetime < datetime.now(timezone.utc):
             raise ValueError('Meeting date and time cannot be in the past')
@@ -106,13 +110,15 @@ class MeetingManager:
             team_id (int): ID of the team.
 
         Raises:
-            ValueError: If a meeting already exists at the given date and time,
+            ValueError: If `member_ids` is empty,
+                        if a meeting already exists at the given date and time,
                         or if the meeting date and time are in the past.
             SQLAlchemyError: If database commit fails.
 
         Returns:
             Meeting: The created meeting object.
         """
+        self.__check_ids_is_not_empty(meeting_data.member_ids)
         self.__check_meeting_datetime(meeting_data.date, meeting_data.time)
         await self.__check_is_meeting_exists(meeting_data, team_id)
 
@@ -123,14 +129,13 @@ class MeetingManager:
             team_id=team_id,
         )
 
-        if meeting_data.member_ids:
-            for member_id in meeting_data.member_ids:
-                await self.__check_user_in_team(member_id, team_id)
+        for member_id in meeting_data.member_ids:
+            await self.__check_user_in_team(member_id, team_id)
 
-            stmt = select(User).where(User.id.in_(meeting_data.member_ids))
-            result = await self.session.execute(stmt)
-            users = result.scalars().all()
-            new_meeting.users.extend(users)
+        stmt = select(User).where(User.id.in_(meeting_data.member_ids))
+        result = await self.session.execute(stmt)
+        users = result.scalars().all()
+        new_meeting.users.extend(users)
 
         self.session.add(new_meeting)
 
@@ -184,7 +189,8 @@ class MeetingManager:
             team_id (int): ID of the team.
 
         Raises:
-            ValueError: If a meeting already exists at the given date and time,
+            ValueError: If `member_ids` is empty,
+                        if a meeting already exists at the given date and time,
                         or if the meeting date and time are in the past.
             SQLAlchemyError: If database commit fails.
 
@@ -209,6 +215,7 @@ class MeetingManager:
         if meeting_data.time is not None:
             meeting.time = meeting_data.time
         if meeting_data.member_ids is not None:
+            self.__check_ids_is_not_empty(meeting_data.member_ids)
             for member_id in meeting_data.member_ids:
                 await self.__check_user_in_team(member_id, team_id)
             stmt = select(User).where(User.id.in_(meeting_data.member_ids))
