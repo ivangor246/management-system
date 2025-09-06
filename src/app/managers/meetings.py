@@ -31,7 +31,7 @@ class MeetingManager:
         """
         self.session = session
 
-    async def __check_meeting(self, meeting_data: MeetingCreateSchema, team_id: int) -> bool:
+    async def __check_is_meeting_exists(self, meeting_data: MeetingCreateSchema, team_id: int) -> bool:
         """Check if a meeting already exists for a given date, time, and team.
 
         Args:
@@ -106,7 +106,7 @@ class MeetingManager:
         Returns:
             Meeting: The created meeting object.
         """
-        existing_meeting = await self.__check_meeting(meeting_data, team_id)
+        existing_meeting = await self.__check_is_meeting_exists(meeting_data, team_id)
         if existing_meeting:
             raise ValueError('A meeting already exists at the given date and time')
 
@@ -186,7 +186,7 @@ class MeetingManager:
         """
         self.__check_meeting_in_team(meeting_id, team_id)
 
-        existing_meeting = await self.__check_meeting(meeting_data, team_id)
+        existing_meeting = await self.__check_is_meeting_exists(meeting_data, team_id)
         if existing_meeting:
             raise ValueError('A meeting already exists at the given date and time')
 
