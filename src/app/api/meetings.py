@@ -118,4 +118,4 @@ async def delete_meeting(
         team_id (int): ID of the team the meeting belongs to.
         member (User): Authenticated user with manager or admin role.
     """
-    await service.delete_meeting(meeting_id)
+    await service.delete_meeting(meeting_id, team_id)

@@ -51,6 +51,28 @@ class MeetingManager:
             return True
         return False
 
+    async def __check_meeting_in_team(self, meeting_id: int, team_id: int):
+        """
+        Check whether a meeting exists and belongs to the given team.
+
+        Args:
+            meeting_id (int): ID of the meeting to check.
+            team_id (int): ID of the team to validate against.
+
+        Raises:
+            LookupError: If the meeting is not found.
+            PermissionError: If the meeting does not belong to the given team.
+        """
+        stmt = select(Meeting).where(Meeting.id == meeting_id)
+        result = await self.session.execute(stmt)
+        meeting = result.scalar_one_or_none()
+
+        if not meeting:
+            raise LookupError('The meeting not found')
+
+        if meeting.team_id != team_id:
+            raise PermissionError('The meeting does not belong to the team')
+
     async def create_meeting(self, meeting_data: MeetingCreateSchema | MeetingUpdateSchema, team_id: int) -> Meeting:
         """Create a new meeting for a team.
 
@@ -140,6 +162,8 @@ class MeetingManager:
         Returns:
             Meeting | None: The updated meeting object, or None if not found.
         """
+        self.__check_meeting_in_team(meeting_id, team_id)
+
         existing_meeting = await self.__check_meeting(meeting_data, team_id)
         if existing_meeting:
             raise ValueError('A meeting already exists at the given date and time')
@@ -172,7 +196,7 @@ class MeetingManager:
 
         return meeting
 
-    async def delete_meeting(self, meeting_id: int) -> bool:
+    async def delete_meeting(self, meeting_id: int, team_id: int) -> bool:
         """Delete a meeting by its ID.
 
         Args:
@@ -184,6 +208,8 @@ class MeetingManager:
         Returns:
             bool: True if the meeting was deleted, False if not found.
         """
+        self.__check_meeting_in_team(meeting_id, team_id)
+
         stmt = select(Meeting).where(Meeting.id == meeting_id)
         result = await self.session.execute(stmt)
         meeting = result.scalar_one_or_none()

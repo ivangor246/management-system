@@ -112,7 +112,7 @@ class MeetingService:
             MeetingUpdateSuccessSchema: Success schema for the update.
 
         Raises:
-            HTTPException: If the meeting does not exist, overlaps with another, or on database error.
+            HTTPException: If the meeting does not exist, overlaps with another, database or permission error.
         """
         try:
             meeting = await self.manager.update_meeting(meeting_data, meeting_id, team_id)
@@ -121,6 +121,16 @@ class MeetingService:
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail='The meeting was not found',
                 )
+        except LookupError as e:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(e),
+            )
+        except PermissionError as e:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f'{e}',
+            )
         except ValueError as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -134,17 +144,29 @@ class MeetingService:
 
         return MeetingUpdateSuccessSchema()
 
-    async def delete_meeting(self, meeting_id: int) -> None:
+    async def delete_meeting(self, meeting_id: int, team_id: int) -> None:
         """
         Deletes a meeting by its ID.
 
         Args:
             meeting_id (int): ID of the meeting to delete.
+            team_id (int): ID of the team the meeting belongs to.
 
         Raises:
-            HTTPException: If the meeting does not exist.
+            HTTPException: If the meeting does not exist or permission error.
         """
-        deleted = await self.manager.delete_meeting(meeting_id)
+        try:
+            deleted = await self.manager.delete_meeting(meeting_id, team_id)
+        except LookupError as e:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(e),
+            )
+        except PermissionError as e:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f'{e}',
+            )
         if not deleted:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
