@@ -54,7 +54,7 @@ class MeetingService:
             MeetingCreateSuccessSchema: Schema containing the ID of the created meeting.
 
         Raises:
-            HTTPException: If a meeting already exists at the given date and time or on database error.
+            HTTPException: Error while creating the meeting.
         """
         try:
             new_meeting = await self.manager.create_meeting(meeting_data, team_id)
@@ -117,7 +117,7 @@ class MeetingService:
             MeetingUpdateSuccessSchema: Success schema for the update.
 
         Raises:
-            HTTPException: If the meeting does not exist, overlaps with another, database or permission error.
+            HTTPException: Error while updating the meeting.
         """
         try:
             meeting = await self.manager.update_meeting(meeting_data, meeting_id, team_id)

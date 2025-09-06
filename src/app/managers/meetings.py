@@ -1,3 +1,4 @@
+from datetime import date, datetime, time, timezone
 from typing import Annotated
 
 from fastapi import Depends
@@ -31,7 +32,12 @@ class MeetingManager:
         """
         self.session = session
 
-    async def __check_is_meeting_exists(self, meeting_data: MeetingCreateSchema, team_id: int) -> bool:
+    def __check_meeting_datetime(self, meeting_date: date, meeting_time: time):
+        meeting_datetime = datetime.combine(meeting_date, meeting_time, tzinfo=timezone.utc)
+        if meeting_datetime < datetime.now(timezone.utc):
+            raise ValueError('Meeting date and time cannot be in the past')
+
+    async def __check_is_meeting_exists(self, meeting_data: MeetingCreateSchema, team_id: int) -> None:
         """Check if a meeting already exists for a given date, time, and team.
 
         Args:
@@ -48,9 +54,9 @@ class MeetingManager:
         )
         result = await self.session.execute(stmt)
         existing_meeting = result.scalar_one_or_none()
+
         if existing_meeting:
-            return True
-        return False
+            raise ValueError('A meeting already exists at the given date and time')
 
     async def __check_meeting_in_team(self, meeting_id: int, team_id: int):
         """
@@ -100,15 +106,15 @@ class MeetingManager:
             team_id (int): ID of the team.
 
         Raises:
-            ValueError: If a meeting already exists at the given date and time.
+            ValueError: If a meeting already exists at the given date and time,
+                        or if the meeting date and time are in the past.
             SQLAlchemyError: If database commit fails.
 
         Returns:
             Meeting: The created meeting object.
         """
-        existing_meeting = await self.__check_is_meeting_exists(meeting_data, team_id)
-        if existing_meeting:
-            raise ValueError('A meeting already exists at the given date and time')
+        self.__check_meeting_datetime(meeting_data.date, meeting_data.time)
+        await self.__check_is_meeting_exists(meeting_data, team_id)
 
         new_meeting = Meeting(
             name=meeting_data.name,
@@ -178,17 +184,16 @@ class MeetingManager:
             team_id (int): ID of the team.
 
         Raises:
-            ValueError: If a meeting already exists at the new date and time.
+            ValueError: If a meeting already exists at the given date and time,
+                        or if the meeting date and time are in the past.
             SQLAlchemyError: If database commit fails.
 
         Returns:
             Meeting | None: The updated meeting object, or None if not found.
         """
-        self.__check_meeting_in_team(meeting_id, team_id)
-
-        existing_meeting = await self.__check_is_meeting_exists(meeting_data, team_id)
-        if existing_meeting:
-            raise ValueError('A meeting already exists at the given date and time')
+        self.__check_meeting_datetime(meeting_data.date, meeting_data.time)
+        await self.__check_meeting_in_team(meeting_id, team_id)
+        await self.__check_is_meeting_exists(meeting_data, team_id)
 
         stmt = select(Meeting).where(Meeting.id == meeting_id)
         result = await self.session.execute(stmt)
@@ -232,7 +237,7 @@ class MeetingManager:
         Returns:
             bool: True if the meeting was deleted, False if not found.
         """
-        self.__check_meeting_in_team(meeting_id, team_id)
+        await self.__check_meeting_in_team(meeting_id, team_id)
 
         stmt = select(Meeting).where(Meeting.id == meeting_id)
         result = await self.session.execute(stmt)
