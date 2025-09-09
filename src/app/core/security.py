@@ -29,6 +29,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import config
 from app.core.database import get_session
+from app.core.redis import redis
 from app.models.teams import UserRoles, UserTeam
 from app.models.users import User
 
@@ -55,28 +56,43 @@ async def get_request_user(
         session (AsyncSession): Database session.
 
     Raises:
-        HTTPException: If token is invalid, expired, or user does not exist.
+        HTTPException: If token is invalid, expired, revoked, or user does not exist.
 
     Returns:
         User: The authenticated user.
     """
     token = credentials.credentials
+
+    if await redis.exists(f'bl:{token}'):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Token revoked',
+        )
+
     token_mixin = TokenMixin()
     payload = token_mixin.validate_token(token)
-
     if not payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid or expired token')
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Invalid or expired token',
+        )
 
     email = token_mixin.get_email_from_payload(payload)
     if not email:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid token payload')
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Invalid token payload',
+        )
 
     stmt = select(User).where(User.email == email)
     result = await session.execute(stmt)
     user = result.scalar_one_or_none()
 
     if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='User not found')
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='User not found',
+        )
 
     return user
 
@@ -200,7 +216,7 @@ class TokenMixin:
             dict | None: Decoded payload if valid, otherwise None.
         """
         try:
-            payload = self.__decode_access_token(token)
+            payload = self.decode_access_token(token)
         except Exception:
             return None
 
@@ -226,7 +242,7 @@ class TokenMixin:
         expires_at = int(datetime.now(timezone.utc).timestamp()) + config.ACCESS_TOKEN_EXPIRE_MINUTES * 60
         return {'sub': email, 'expires_at': expires_at}
 
-    def __decode_access_token(self, token: str) -> dict:
+    def decode_access_token(self, token: str) -> dict:
         """Decode a JWT token."""
         return jwt.decode(token, config.SECRET_KEY, algorithms=[config.TOKEN_ALGORITHM])
 

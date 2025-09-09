@@ -57,6 +57,8 @@ class Config(BaseSettings):
     ADMIN_NAME: str = Field(alias='ADMIN_NAME')
     ADMIN_PASS: str = Field(alias='ADMIN_PASS')
 
+    REDIS_URL: str = 'redis://redis:6379/0'
+
     @property
     def DB_URL(self) -> str:
         """
