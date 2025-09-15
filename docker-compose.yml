@@ -13,6 +13,8 @@ services:
       - WATCH_MODE
     ports:
       - ${ROOT_PORT}:8000
+    volumes:
+      - ./src/app/migrations:/project/src/app/migrations
     develop:
       watch:
         - action: sync

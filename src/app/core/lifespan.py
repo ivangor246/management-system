@@ -16,7 +16,6 @@ from typing import AsyncGenerator
 from fastapi import FastAPI
 
 from app.admin.setup import create_admin_if_not_exists
-from app.core.database import init_models
 
 
 @asynccontextmanager
@@ -24,8 +23,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
     FastAPI lifespan context manager.
 
-    Ensures that all database tables are initialized and the admin user exists
-    before the application starts.
+    Initializes the admin user if it does not exist
 
     Args:
         app (FastAPI): The FastAPI application instance.
@@ -33,8 +31,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     Yields:
         None
     """
-    await init_models()
-
     await create_admin_if_not_exists()
 
     yield
