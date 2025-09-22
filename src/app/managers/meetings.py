@@ -148,7 +148,7 @@ class MeetingManager:
 
         return new_meeting
 
-    async def get_meetings_by_team(self, team_id: int) -> list[Meeting]:
+    async def get_meetings_by_team(self, team_id: int, limit: int = 0, offset: int = 0) -> list[Meeting]:
         """Retrieve all meetings for a given team.
 
         Args:
@@ -158,10 +158,17 @@ class MeetingManager:
             list[Meeting]: List of meetings with participants loaded.
         """
         stmt = select(Meeting).where(Meeting.team_id == team_id).options(selectinload(Meeting.users))
+        if limit:
+            stmt = stmt.limit(limit)
+        if offset:
+            stmt = stmt.offset(offset)
+        result = await self.session.execute(stmt)
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
-    async def get_meetings_by_member(self, member_id: int, team_id: int) -> list[Meeting]:
+    async def get_meetings_by_member(
+        self, member_id: int, team_id: int, limit: int = 0, offset: int = 0
+    ) -> list[Meeting]:
         """Retrieve all meetings in which a specific member participates within a team.
 
         Args:
@@ -177,6 +184,10 @@ class MeetingManager:
             .where(User.id == member_id, Meeting.team_id == team_id)
             .options(selectinload(Meeting.users))
         )
+        if limit:
+            stmt = stmt.limit(limit)
+        if offset:
+            stmt = stmt.offset(offset)
         result = await self.session.execute(stmt)
         return result.scalars().all()
 

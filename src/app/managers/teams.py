@@ -93,7 +93,7 @@ class TeamManager:
 
         return new_user_team_association
 
-    async def get_users(self, team_id: int) -> list[tuple[User, UserRoles]]:
+    async def get_users(self, team_id: int, limit: int = 0, offset: int = 0) -> list[tuple[User, UserRoles]]:
         """
         Get all users and their roles in a specific team.
 
@@ -111,10 +111,14 @@ class TeamManager:
             )
             .where(UserTeam.team_id == team_id)
         )
+        if limit:
+            stmt = stmt.limit(limit)
+        if offset:
+            stmt = stmt.offset(offset)
         result = await self.session.execute(stmt)
         return [(user, role) for user, role in result.all()]
 
-    async def get_teams_by_user(self, user_id: int) -> list[tuple[Team, UserRoles]]:
+    async def get_teams_by_user(self, user_id: int, limit: int = 0, offset: int = 0) -> list[tuple[Team, UserRoles]]:
         """
         Get all teams that a specific user belongs to along with their roles.
 
@@ -132,6 +136,10 @@ class TeamManager:
             )
             .where(UserTeam.user_id == user_id)
         )
+        if limit:
+            stmt = stmt.limit(limit)
+        if offset:
+            stmt = stmt.offset(offset)
         result = await self.session.execute(stmt)
         return [(team, role) for team, role in result.all()]
 

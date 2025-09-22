@@ -108,7 +108,7 @@ class TaskManager:
 
         return new_task
 
-    async def get_tasks_by_team(self, team_id: int) -> list[Task]:
+    async def get_tasks_by_team(self, team_id: int, limit: int = 0, offset: int = 0) -> list[Task]:
         """
         Retrieve all tasks for a given team, including associated evaluation objects.
 
@@ -119,10 +119,16 @@ class TaskManager:
             list[Task]: List of Task objects. Each Task includes its evaluation if present.
         """
         stmt = select(Task).where(Task.team_id == team_id).options(selectinload(Task.evaluation))
+        if limit:
+            stmt = stmt.limit(limit)
+        if offset:
+            stmt = stmt.offset(offset)
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
-    async def get_tasks_by_performer(self, performer_id: int, team_id: int) -> list[Task]:
+    async def get_tasks_by_performer(
+        self, performer_id: int, team_id: int, limit: int = 0, offset: int = 0
+    ) -> list[Task]:
         """
         Retrieve all tasks for a specific performer within a team, including evaluations.
 
@@ -139,6 +145,10 @@ class TaskManager:
             .where(Task.performer_id == performer_id, Task.team_id == team_id)
             .options(selectinload(Task.evaluation))
         )
+        if limit:
+            stmt = stmt.limit(limit)
+        if offset:
+            stmt = stmt.offset(offset)
         result = await self.session.execute(stmt)
         return result.scalars().all()
 

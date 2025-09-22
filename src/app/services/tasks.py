@@ -78,7 +78,7 @@ class TaskService:
             )
         return TaskCreateSuccessSchema(task_id=new_task.id)
 
-    async def get_tasks_by_team(self, team_id: int) -> list[TaskSchema]:
+    async def get_tasks_by_team(self, team_id: int, limit: int = 0, offset: int = 0) -> list[TaskSchema]:
         """
         Retrieves all tasks for a given team.
 
@@ -89,10 +89,12 @@ class TaskService:
             list[TaskSchema]: List of TaskSchema objects. Each task includes its evaluation value
             if it exists.
         """
-        tasks = await self.manager.get_tasks_by_team(team_id)
+        tasks = await self.manager.get_tasks_by_team(team_id, limit, offset)
         return [TaskSchema.model_validate(task) for task in tasks]
 
-    async def get_tasks_by_performer(self, performer_id: int, team_id: int) -> list[TaskSchema]:
+    async def get_tasks_by_performer(
+        self, performer_id: int, team_id: int, limit: int = 0, offset: int = 0
+    ) -> list[TaskSchema]:
         """
         Retrieves tasks assigned to a specific performer within a team.
 
@@ -104,7 +106,7 @@ class TaskService:
             list[TaskSchema]: List of TaskSchema objects. Each task includes its evaluation value
             if it exists.
         """
-        tasks = await self.manager.get_tasks_by_performer(performer_id, team_id)
+        tasks = await self.manager.get_tasks_by_performer(performer_id, team_id, limit, offset)
         return [TaskSchema.model_validate(task) for task in tasks]
 
     async def update_task(self, task_data: TaskUpdateSchema, task_id: int, team_id: int) -> TaskUpdateSuccessSchema:

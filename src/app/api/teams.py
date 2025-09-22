@@ -45,6 +45,8 @@ async def create_team(
 async def get_my_teams(
     service: Annotated[TeamService, Depends(get_team_service)],
     auth_user: Annotated[User, Depends(get_request_user)],
+    l: int = 0,
+    o: int = 0,
 ) -> list[TeamByMemberSchema]:
     """
     Retrieve all teams the current user belongs to.
@@ -56,7 +58,7 @@ async def get_my_teams(
     Returns:
         list[TeamByMemberSchema]: List of teams and user's roles.
     """
-    return await service.get_teams_by_user(auth_user.id)
+    return await service.get_teams_by_user(auth_user.id, l, o)
 
 
 @teams_router.get('/{team_id:int}')
@@ -64,6 +66,8 @@ async def get_team_members(
     service: Annotated[TeamService, Depends(get_team_service)],
     team_id: int,
     member: Annotated[User, Depends(require_member)],
+    l: int = 0,
+    o: int = 0,
 ) -> list[TeamMemberSchema]:
     """
     Retrieve all members of a specific team.
@@ -76,7 +80,7 @@ async def get_team_members(
     Returns:
         list[TeamMemberSchema]: List of team members and their roles.
     """
-    return await service.get_users(team_id)
+    return await service.get_users(team_id, l, o)
 
 
 @teams_router.post('/{team_id:int}/users')

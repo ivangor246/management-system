@@ -87,7 +87,7 @@ class CommentManager:
 
         return new_comment
 
-    async def get_comments_by_task(self, task_id: int, team_id: int) -> list[Comment]:
+    async def get_comments_by_task(self, task_id: int, team_id: int, limit: int = 0, offset: int = 0) -> list[Comment]:
         """
         Retrieve all comments for a given task.
 
@@ -105,6 +105,10 @@ class CommentManager:
         await self.__check_task_in_team(task_id, team_id)
 
         stmt = select(Comment).where(Comment.task_id == task_id).order_by(Comment.created_at)
+        if limit:
+            stmt = stmt.limit(limit)
+        if offset:
+            stmt = stmt.offset(offset)
         result = await self.session.execute(stmt)
         return result.scalars().all()
 

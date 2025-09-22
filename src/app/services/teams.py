@@ -69,7 +69,7 @@ class TeamService:
             )
         return TeamCreateSuccessSchema(team_id=new_team.id)
 
-    async def get_users(self, team_id: int) -> list[TeamMemberSchema]:
+    async def get_users(self, team_id: int, limit: int = 0, offset: int = 0) -> list[TeamMemberSchema]:
         """
         Retrieves all users and their roles for a specific team.
 
@@ -82,7 +82,7 @@ class TeamService:
         Raises:
             HTTPException: If the team is not found.
         """
-        users_and_roles = await self.manager.get_users(team_id)
+        users_and_roles = await self.manager.get_users(team_id, limit, offset)
 
         if not users_and_roles:
             raise HTTPException(
@@ -100,7 +100,7 @@ class TeamService:
         ]
         return members
 
-    async def get_teams_by_user(self, user_id: int) -> list[TeamByMemberSchema]:
+    async def get_teams_by_user(self, user_id: int, limit: int = 0, offset: int = 0) -> list[TeamByMemberSchema]:
         """
         Retrieves all teams a user is part of along with their roles.
 
@@ -110,7 +110,7 @@ class TeamService:
         Returns:
             list[TeamByMemberSchema]: List of teams with the user's role in each.
         """
-        teams_and_roles = await self.manager.get_teams_by_user(user_id)
+        teams_and_roles = await self.manager.get_teams_by_user(user_id, limit, offset)
         teams = [
             TeamByMemberSchema(
                 team_id=team.id,

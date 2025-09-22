@@ -75,7 +75,7 @@ class MeetingService:
             )
         return MeetingCreateSuccessSchema(meeting_id=new_meeting.id)
 
-    async def get_meetings_by_team(self, team_id: int) -> list[MeetingSchema]:
+    async def get_meetings_by_team(self, team_id: int, limit: int = 0, offset: int = 0) -> list[MeetingSchema]:
         """
         Retrieves all meetings for a specific team.
 
@@ -85,10 +85,12 @@ class MeetingService:
         Returns:
             list[MeetingSchema]: List of meeting schemas.
         """
-        meetings = await self.manager.get_meetings_by_team(team_id)
+        meetings = await self.manager.get_meetings_by_team(team_id, limit, offset)
         return [MeetingSchema.model_validate(meeting) for meeting in meetings]
 
-    async def get_meetings_by_member(self, member_id: int, team_id: int) -> list[MeetingSchema]:
+    async def get_meetings_by_member(
+        self, member_id: int, team_id: int, limit: int = 0, offset: int = 0
+    ) -> list[MeetingSchema]:
         """
         Retrieves all meetings for a specific member within a team.
 
@@ -99,7 +101,7 @@ class MeetingService:
         Returns:
             list[MeetingSchema]: List of meeting schemas.
         """
-        meetings = await self.manager.get_meetings_by_member(member_id, team_id)
+        meetings = await self.manager.get_meetings_by_member(member_id, team_id, limit, offset)
         return [MeetingSchema.model_validate(meeting) for meeting in meetings]
 
     async def update_meeting(

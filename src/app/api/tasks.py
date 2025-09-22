@@ -46,6 +46,8 @@ async def get_tasks_by_team(
     service: Annotated[TaskService, Depends(get_task_service)],
     team_id: int,
     member: Annotated[User, Depends(require_member)],
+    l: int = 0,
+    o: int = 0,
 ) -> list[TaskSchema]:
     """
     Retrieve all tasks for a team.
@@ -58,7 +60,7 @@ async def get_tasks_by_team(
     Returns:
         list[TaskSchema]: List of tasks for the team.
     """
-    return await service.get_tasks_by_team(team_id)
+    return await service.get_tasks_by_team(team_id, l, o)
 
 
 @tasks_router.get('/mine')
@@ -66,6 +68,8 @@ async def get_my_tasks_in_team(
     service: Annotated[TaskService, Depends(get_task_service)],
     team_id: int,
     member: Annotated[User, Depends(require_member)],
+    l: int = 0,
+    o: int = 0,
 ) -> list[TaskSchema]:
     """
     Retrieve tasks assigned to the current user within a team.
@@ -78,7 +82,7 @@ async def get_my_tasks_in_team(
     Returns:
         list[TaskSchema]: List of tasks assigned to the user.
     """
-    return await service.get_tasks_by_performer(member.id, team_id)
+    return await service.get_tasks_by_performer(member.id, team_id, l, o)
 
 
 @tasks_router.put('/{task_id:int}')

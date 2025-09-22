@@ -69,7 +69,9 @@ class CommentService:
             )
         return CommentCreateSuccessSchema(comment_id=new_comment.id)
 
-    async def get_comments_by_task(self, task_id: int, team_id: int) -> list[CommentSchema]:
+    async def get_comments_by_task(
+        self, task_id: int, team_id: int, limit: int = 0, offset: int = 0
+    ) -> list[CommentSchema]:
         """
         Retrieve all comments for a specific task.
 
@@ -84,7 +86,7 @@ class CommentService:
             HTTPException: If the task is not found or access is denied.
         """
         try:
-            comments = await self.manager.get_comments_by_task(task_id, team_id)
+            comments = await self.manager.get_comments_by_task(task_id, team_id, limit, offset)
         except LookupError as e:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

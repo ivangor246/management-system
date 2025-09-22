@@ -43,6 +43,8 @@ async def get_meetings_by_team(
     service: Annotated[MeetingService, Depends(get_meeting_service)],
     team_id: int,
     member: Annotated[User, Depends(require_member)],
+    l: int = 0,
+    o: int = 0,
 ) -> list[MeetingSchema]:
     """
     Get all meetings for a specific team.
@@ -55,7 +57,7 @@ async def get_meetings_by_team(
     Returns:
         List[MeetingSchema]: List of meetings for the team.
     """
-    return await service.get_meetings_by_team(team_id)
+    return await service.get_meetings_by_team(team_id, l, o)
 
 
 @meetings_router.get('/mine')
@@ -63,6 +65,8 @@ async def get_my_meetings_in_team(
     service: Annotated[MeetingService, Depends(get_meeting_service)],
     team_id: int,
     member: Annotated[User, Depends(require_member)],
+    l: int = 0,
+    o: int = 0,
 ) -> list[MeetingSchema]:
     """
     Get meetings in a team where the authenticated user is a participant.
@@ -75,7 +79,7 @@ async def get_my_meetings_in_team(
     Returns:
         List[MeetingSchema]: List of meetings the user participates in.
     """
-    return await service.get_meetings_by_member(member.id, team_id)
+    return await service.get_meetings_by_member(member.id, team_id, l, o)
 
 
 @meetings_router.put('/{meeting_id:int}')

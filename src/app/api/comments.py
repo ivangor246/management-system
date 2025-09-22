@@ -40,6 +40,8 @@ async def get_comments_by_task(
     task_id: int,
     team_id: int,
     member: Annotated[User, Depends(require_member)],
+    l: int = 0,
+    o: int = 0,
 ) -> list[CommentSchema]:
     """
     Retrieve all comments for a specific task.
@@ -53,7 +55,7 @@ async def get_comments_by_task(
     Returns:
         List[CommentSchema]: A list of comments for the specified task.
     """
-    return await service.get_comments_by_task(task_id, team_id)
+    return await service.get_comments_by_task(task_id, team_id, l, o)
 
 
 @comments_router.delete('/{comment_id:int}', status_code=status.HTTP_204_NO_CONTENT)
