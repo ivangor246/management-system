@@ -44,12 +44,12 @@ async def team(session: AsyncSession, users: list[User]) -> Team:
 
 
 @pytest.fixture
-def meeting_data() -> MeetingCreateSchema:
+def meeting_data(users: list[User]) -> MeetingCreateSchema:
     return MeetingCreateSchema(
         name='meeting_name1',
-        date=datetime.date.today(),
+        date=datetime.date.today() + datetime.timedelta(days=5),
         time=datetime.datetime.now().time(),
-        member_ids=[],
+        member_ids=[users[0].id],
     )
 
 
@@ -71,7 +71,7 @@ class TestMeetingManager:
             await manager.create_meeting(meeting_data, team.id)
 
         meeting_data_2 = meeting_data.model_copy()
-        meeting_data_2.date = datetime.date.today() - datetime.timedelta(days=1)
+        meeting_data_2.date = meeting_data.date - datetime.timedelta(days=1)
         meeting_data_2.member_ids = [users[1].id, users[2].id]
         new_meeting_2 = await manager.create_meeting(meeting_data_2, team.id)
         assert new_meeting_2.date == meeting_data_2.date
@@ -88,7 +88,7 @@ class TestMeetingManager:
         manager = MeetingManager(session)
         await manager.create_meeting(meeting_data, team.id)
         meeting_data_2 = meeting_data.model_copy()
-        meeting_data_2.date = datetime.date.today() - datetime.timedelta(days=1)
+        meeting_data_2.date = meeting_data.date - datetime.timedelta(days=1)
         await manager.create_meeting(meeting_data_2, team.id)
 
         meetings = await manager.get_meetings_by_team(team.id)
@@ -106,7 +106,7 @@ class TestMeetingManager:
         await manager.create_meeting(meeting_data, team.id)
         meeting_data_2 = meeting_data.model_copy()
         meeting_data_2.member_ids = [users[1].id, users[2].id]
-        meeting_data_2.date = datetime.date.today() - datetime.timedelta(days=1)
+        meeting_data_2.date = meeting_data.date - datetime.timedelta(days=1)
         await manager.create_meeting(meeting_data_2, team.id)
 
         meetings = await manager.get_meetings_by_member(users[1].id, team.id)
@@ -126,7 +126,7 @@ class TestMeetingManager:
 
         meeting_data_for_update = MeetingUpdateSchema(
             name='meeting_name2',
-            date=datetime.date.today() - datetime.timedelta(days=1),
+            date=meeting_data.date - datetime.timedelta(days=1),
         )
         updated_meeting = await manager.update_meeting(meeting_data_for_update, new_meeting.id, team.id)
         assert updated_meeting.name == meeting_data_for_update.name
@@ -146,13 +146,13 @@ class TestMeetingManager:
         manager = MeetingManager(session)
         new_meeting_1 = await manager.create_meeting(meeting_data, team.id)
         meeting_data_2 = meeting_data.model_copy()
-        meeting_data_2.date = datetime.date.today() - datetime.timedelta(days=1)
+        meeting_data_2.date = meeting_data.date - datetime.timedelta(days=1)
         new_meeting_2 = await manager.create_meeting(meeting_data_2, team.id)
 
-        await manager.delete_meeting(new_meeting_1.id)
+        await manager.delete_meeting(new_meeting_1.id, team.id)
         meetings = await manager.get_meetings_by_team(team.id)
         assert len(meetings) == 1
 
-        await manager.delete_meeting(new_meeting_2.id)
+        await manager.delete_meeting(new_meeting_2.id, team.id)
         meetings = await manager.get_meetings_by_team(team.id)
         assert len(meetings) == 0

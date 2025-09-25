@@ -208,7 +208,6 @@ class MeetingManager:
         Returns:
             Meeting | None: The updated meeting object, or None if not found.
         """
-        self.__check_meeting_datetime(meeting_data.date, meeting_data.time)
         await self.__check_meeting_in_team(meeting_id, team_id)
         await self.__check_is_meeting_exists(meeting_data, team_id)
 
@@ -218,6 +217,8 @@ class MeetingManager:
 
         if not meeting:
             return None
+
+        self.__check_meeting_datetime(meeting_data.date or meeting.date, meeting_data.time or meeting.time)
 
         if meeting_data.name is not None:
             meeting.name = meeting_data.name

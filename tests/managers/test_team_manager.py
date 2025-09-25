@@ -158,7 +158,5 @@ class TestTeamManager:
             )
             session.add(new_evaluation)
 
-        start_date = date.today() - timedelta(days=5)
-        end_date = date.today()
-        avg_evaluation = await manager.get_avg_evaluation(users[0].id, new_team.id, start_date, end_date)
+        avg_evaluation = await manager.get_avg_evaluation(users[0].id, new_team.id)
         assert avg_evaluation == round(sum(evaluations) / len(evaluations), 2)
