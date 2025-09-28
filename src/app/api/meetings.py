@@ -111,7 +111,7 @@ async def delete_meeting(
     service: Annotated[MeetingService, Depends(get_meeting_service)],
     meeting_id: int,
     team_id: int,
-    member: Annotated[User, Depends(require_manager)],
+    manager: Annotated[User, Depends(require_manager)],
 ):
     """
     Delete a meeting from a team.
@@ -120,6 +120,6 @@ async def delete_meeting(
         service (MeetingService): Dependency providing meeting operations.
         meeting_id (int): ID of the meeting to delete.
         team_id (int): ID of the team the meeting belongs to.
-        member (User): Authenticated user with manager privileges.
+        manager (User): Authenticated user with manager privileges.
     """
     await service.delete_meeting(meeting_id, team_id)
