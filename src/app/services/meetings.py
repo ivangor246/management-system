@@ -15,10 +15,11 @@ from app.schemas.meetings import (
 
 class MeetingService:
     """
-    Service to handle operations related to meetings, including creation, retrieval, updating, and deletion.
+    Service layer responsible for handling meeting-related operations,
+    including creation, retrieval, updating, and deletion.
 
     Attributes:
-        manager (MeetingManager): Manager responsible for meeting database operations.
+        manager (MeetingManager): Manager responsible for database operations on meetings.
 
     Methods:
         create_meeting(meeting_data: MeetingCreateSchema, team_id: int) -> MeetingCreateSuccessSchema:
@@ -29,22 +30,22 @@ class MeetingService:
             Retrieves all meetings for a specific member within a team.
         update_meeting(meeting_data: MeetingUpdateSchema, meeting_id: int, team_id: int) -> MeetingUpdateSuccessSchema:
             Updates an existing meeting. Raises HTTPException if not found.
-        delete_meeting(meeting_id: int) -> None:
-            Deletes a meeting by ID. Raises HTTPException if not found.
+        delete_meeting(meeting_id: int, team_id: int) -> None:
+            Deletes a meeting by ID. Raises HTTPException if not found or access is denied.
     """
 
     def __init__(self, manager: MeetingManager):
         """
-        Initializes the MeetingService with a MeetingManager.
+        Initialize the MeetingService with a MeetingManager.
 
         Args:
-            manager (MeetingManager): The manager instance for handling meeting operations.
+            manager (MeetingManager): Manager instance for handling meeting operations.
         """
         self.manager = manager
 
     async def create_meeting(self, meeting_data: MeetingCreateSchema, team_id: int) -> MeetingCreateSuccessSchema:
         """
-        Creates a new meeting for a team.
+        Create a new meeting for a team.
 
         Args:
             meeting_data (MeetingCreateSchema): Data required to create the meeting.
@@ -54,7 +55,7 @@ class MeetingService:
             MeetingCreateSuccessSchema: Schema containing the ID of the created meeting.
 
         Raises:
-            HTTPException: Error while creating the meeting.
+            HTTPException: If there is an error during meeting creation.
         """
         try:
             new_meeting = await self.manager.create_meeting(meeting_data, team_id)
@@ -77,13 +78,15 @@ class MeetingService:
 
     async def get_meetings_by_team(self, team_id: int, limit: int = 0, offset: int = 0) -> list[MeetingSchema]:
         """
-        Retrieves all meetings for a specific team.
+        Retrieve all meetings for a specific team.
 
         Args:
             team_id (int): ID of the team.
+            limit (int, optional): Maximum number of meetings to retrieve. Defaults to 0 (no limit).
+            offset (int, optional): Number of meetings to skip before returning results. Defaults to 0.
 
         Returns:
-            list[MeetingSchema]: List of meeting schemas.
+            list[MeetingSchema]: List of meeting schemas for the specified team.
         """
         meetings = await self.manager.get_meetings_by_team(team_id, limit, offset)
         return [MeetingSchema.model_validate(meeting) for meeting in meetings]
@@ -92,14 +95,16 @@ class MeetingService:
         self, member_id: int, team_id: int, limit: int = 0, offset: int = 0
     ) -> list[MeetingSchema]:
         """
-        Retrieves all meetings for a specific member within a team.
+        Retrieve all meetings for a specific member within a team.
 
         Args:
             member_id (int): ID of the member.
             team_id (int): ID of the team.
+            limit (int, optional): Maximum number of meetings to retrieve. Defaults to 0 (no limit).
+            offset (int, optional): Number of meetings to skip before returning results. Defaults to 0.
 
         Returns:
-            list[MeetingSchema]: List of meeting schemas.
+            list[MeetingSchema]: List of meeting schemas for the specified member and team.
         """
         meetings = await self.manager.get_meetings_by_member(member_id, team_id, limit, offset)
         return [MeetingSchema.model_validate(meeting) for meeting in meetings]
@@ -108,7 +113,7 @@ class MeetingService:
         self, meeting_data: MeetingUpdateSchema, meeting_id: int, team_id: int
     ) -> MeetingUpdateSuccessSchema:
         """
-        Updates an existing meeting.
+        Update an existing meeting.
 
         Args:
             meeting_data (MeetingUpdateSchema): Data to update the meeting.
@@ -116,10 +121,10 @@ class MeetingService:
             team_id (int): ID of the team the meeting belongs to.
 
         Returns:
-            MeetingUpdateSuccessSchema: Success schema for the update.
+            MeetingUpdateSuccessSchema: Success schema indicating the meeting was updated.
 
         Raises:
-            HTTPException: Error while updating the meeting.
+            HTTPException: If the meeting does not exist, access is denied, or an error occurs.
         """
         try:
             meeting = await self.manager.update_meeting(meeting_data, meeting_id, team_id)
@@ -153,14 +158,14 @@ class MeetingService:
 
     async def delete_meeting(self, meeting_id: int, team_id: int) -> None:
         """
-        Deletes a meeting by its ID.
+        Delete a meeting by its ID.
 
         Args:
             meeting_id (int): ID of the meeting to delete.
             team_id (int): ID of the team the meeting belongs to.
 
         Raises:
-            HTTPException: If the meeting does not exist or permission error.
+            HTTPException: If the meeting does not exist or access is denied.
         """
         try:
             deleted = await self.manager.delete_meeting(meeting_id, team_id)

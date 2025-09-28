@@ -27,16 +27,16 @@ async def create_task(
     manager: Annotated[User, Depends(require_manager)],
 ) -> TaskCreateSuccessSchema:
     """
-    Create a new task for a specified team.
+    Create a new task for a team.
 
     Args:
         service (TaskService): Task service dependency.
         task_data (TaskCreateSchema): Data for the new task.
-        team_id (int): ID of the team where the task will be created.
-        manager (User): Team manager creating the task.
+        team_id (int): ID of the team.
+        manager (User): Authenticated user with manager privileges.
 
     Returns:
-        TaskCreateSuccessSchema: ID of the newly created task.
+        TaskCreateSuccessSchema: Schema containing the ID of the created task.
     """
     return await service.create_task(task_data, team_id)
 
@@ -50,12 +50,12 @@ async def get_tasks_by_team(
     o: int = 0,
 ) -> list[TaskSchema]:
     """
-    Retrieve all tasks for a team.
+    Retrieve all tasks for a specific team.
 
     Args:
         service (TaskService): Task service dependency.
         team_id (int): ID of the team.
-        member (User): User requesting tasks.
+        member (User): Authenticated user performing the request.
 
     Returns:
         list[TaskSchema]: List of tasks for the team.
@@ -77,7 +77,7 @@ async def get_my_tasks_in_team(
     Args:
         service (TaskService): Task service dependency.
         team_id (int): ID of the team.
-        member (User): Current user.
+        member (User): Authenticated user.
 
     Returns:
         list[TaskSchema]: List of tasks assigned to the user.
@@ -94,17 +94,17 @@ async def update_task(
     manager: Annotated[User, Depends(require_manager)],
 ) -> TaskUpdateSuccessSchema:
     """
-    Update a task's details. Only for manager or admin.
+    Update an existing task.
 
     Args:
         service (TaskService): Task service dependency.
         task_data (TaskUpdateSchema): Updated task data.
         task_id (int): ID of the task to update.
         team_id (int): ID of the team.
-        manager (User): Manager or admin updating the task.
+        manager (User): Authenticated user with manager privileges.
 
     Returns:
-        TaskUpdateSuccessSchema: Success response for the update.
+        TaskUpdateSuccessSchema: Confirmation of the update.
     """
     return await service.update_task(task_data, task_id, team_id)
 
@@ -122,13 +122,13 @@ async def update_task_evaluation(
 
     Args:
         service (TaskService): Task service dependency.
-        task_id (int): ID of the task to update.
-        evaluation_data (EvaluationSchema): New evaluation data.
+        task_id (int): ID of the task to evaluate.
+        evaluation_data (EvaluationSchema): Evaluation data.
         team_id (int): ID of the team.
-        manager (User): Team manager performing the update.
+        manager (User): Authenticated user with manager privileges.
 
     Returns:
-        EvaluationSuccessSchema: Success response for the evaluation update.
+        EvaluationSuccessSchema: Confirmation of the evaluation update.
     """
     return await service.update_task_evaluation(task_id, team_id, manager.id, evaluation_data)
 
@@ -141,16 +141,13 @@ async def delete_task(
     manager: Annotated[User, Depends(require_manager)],
 ):
     """
-    Delete a task from a team.  Only for manager or admin.
+    Delete a task from a team.
 
     Args:
         service (TaskService): Task service dependency.
         task_id (int): ID of the task to delete.
         team_id (int): ID of the team.
-        manager (User): Manager or admin updating the task.
-
-    Returns:
-        None
+        manager (User): Authenticated user with manager privileges.
     """
     await service.delete_task(task_id, team_id)
 

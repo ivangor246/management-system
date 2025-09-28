@@ -22,13 +22,13 @@ async def get_calendar_by_date(
     Retrieve all events (tasks and meetings) for a specific team on a given date.
 
     Args:
-        service (CalendarService): Calendar service dependency.
-        date (datetime.date): The target date to fetch events.
-        team_id (int): ID of the team to query events for.
-        member (User): Authenticated user performing the request.
+        service (CalendarService): Dependency providing calendar operations.
+        date (datetime.date): The date to retrieve events for.
+        team_id (int): ID of the team.
+        member (User): Authenticated team member performing the request.
 
     Returns:
-        CalendarDateSchema: A list of events occurring on the specified date.
+        CalendarDateSchema: Schema containing the date and list of events for that date.
     """
     return await service.get_calendar_by_date(team_id, date)
 
@@ -45,13 +45,13 @@ async def get_calendar_by_month(
     Retrieve all events (tasks and meetings) for a specific team within a given month.
 
     Args:
-        service (CalendarService): Calendar service dependency.
-        year (int): Year of the month to fetch events for.
-        month (int): Month (1-12) to fetch events for.
-        team_id (int): ID of the team to query events for.
-        member (User): Authenticated user performing the request.
+        service (CalendarService): Dependency providing calendar operations.
+        year (int): Year of the target month.
+        month (int): Month number (1-12).
+        team_id (int): ID of the team.
+        member (User): Authenticated team member performing the request.
 
     Returns:
-        CalendarMonthSchema: A list of events occurring within the specified month.
+        CalendarMonthSchema: Schema containing year, month, and list of events for that month.
     """
     return await service.get_calendar_by_month(team_id, year, month)

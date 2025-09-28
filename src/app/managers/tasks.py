@@ -48,28 +48,28 @@ class TaskManager:
         task = result.scalar_one_or_none()
 
         if not task:
-            raise LookupError('The task not found')
+            raise LookupError('Task not found')
 
         if task.team_id != team_id:
-            raise PermissionError('The task does not belong to the team')
+            raise PermissionError('Task does not belong to the team')
 
     async def __check_user_in_team(self, user_id: int, team_id: int):
         """
-        Check whether a task exists and belongs to the given team.
+        Check whether a user belongs to the given team.
 
         Args:
             user_id (int): ID of the user to check.
             team_id (int): ID of the team to validate against.
 
         Raises:
-            LookupError: If the user is not found.
+            LookupError: If the user is not found in the team.
         """
         stmt = select(UserTeam).where(UserTeam.user_id == user_id, UserTeam.team_id == team_id)
         result = await self.session.execute(stmt)
         user = result.scalar_one_or_none()
 
         if not user:
-            raise LookupError('The user not found in this team')
+            raise LookupError('User not found in this team')
 
     async def create_task(self, task_data: TaskCreateSchema, team_id: int) -> Task:
         """

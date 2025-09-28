@@ -56,7 +56,7 @@ async def get_my_teams(
         auth_user (User): Current authenticated user.
 
     Returns:
-        list[TeamByMemberSchema]: List of teams and user's roles.
+        list[TeamByMemberSchema]: List of teams with the user's roles.
     """
     return await service.get_teams_by_user(auth_user.id, l, o)
 
@@ -75,7 +75,7 @@ async def get_team_members(
     Args:
         service (TeamService): Team service dependency.
         team_id (int): ID of the team.
-        member (User): User requesting team members.
+        member (User): Authenticated user requesting members.
 
     Returns:
         list[TeamMemberSchema]: List of team members and their roles.
@@ -91,16 +91,16 @@ async def add_team_member(
     admin: Annotated[User, Depends(require_admin)],
 ) -> UserTeamCreateSuccessSchema:
     """
-    Add a user to a team with a specified role.
+    Add a user to a team with a specific role.
 
     Args:
         service (TeamService): Team service dependency.
         team_id (int): ID of the team.
-        user_team_data (UserTeamCreateSchema): Data of the user and role to add.
-        admin (User): Admin adding the user to the team.
+        user_team_data (UserTeamCreateSchema): User and role information.
+        admin (User): Admin performing the addition.
 
     Returns:
-        UserTeamCreateSuccessSchema: Success response for the user-team association.
+        UserTeamCreateSuccessSchema: Confirmation of the user-team association.
     """
     return await service.create_user_team_association(user_team_data, team_id)
 
@@ -120,9 +120,6 @@ async def remove_team_member(
         user_id (int): ID of the user to remove.
         team_id (int): ID of the team.
         admin (User): Admin performing the removal.
-
-    Returns:
-        None
     """
     await service.remove_user_from_team(user_id, team_id)
 
@@ -134,15 +131,15 @@ async def get_avg_evaluation(
     member: Annotated[User, Depends(require_member)],
 ) -> float:
     """
-    Retrieve the average evaluation of a user in a team within a date range.
+    Retrieve the average evaluation of the current user in a team.
 
     Args:
         service (TeamService): Team service dependency.
         team_id (int): ID of the team.
-        member (User): User requesting the average evaluation.
+        member (User): Authenticated user.
 
     Returns:
-        float: Average evaluation of the user.
+        float: Average evaluation score.
     """
     return await service.get_avg_evaluation(member.id, team_id)
 

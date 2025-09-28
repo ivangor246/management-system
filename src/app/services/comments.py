@@ -9,7 +9,8 @@ from app.schemas.comments import CommentCreateSchema, CommentCreateSuccessSchema
 
 class CommentService:
     """
-    Service layer for handling operations related to comments, including creation, retrieval, and deletion.
+    Service layer responsible for handling operations related to comments,
+    including creation, retrieval, and deletion.
 
     Attributes:
         manager (CommentManager): Manager responsible for database operations with comments.
@@ -25,10 +26,10 @@ class CommentService:
 
     def __init__(self, manager: CommentManager):
         """
-        Initializes the CommentService with a CommentManager.
+        Initialize the CommentService with a CommentManager.
 
         Args:
-            manager (CommentManager): The manager instance for handling comment operations.
+            manager (CommentManager): Manager instance for handling comment operations.
         """
         self.manager = manager
 
@@ -78,9 +79,11 @@ class CommentService:
         Args:
             task_id (int): ID of the task to fetch comments for.
             team_id (int): ID of the team the task belongs to.
+            limit (int, optional): Maximum number of comments to retrieve. Defaults to 0 (no limit).
+            offset (int, optional): Number of comments to skip before returning results. Defaults to 0.
 
         Returns:
-            list[CommentSchema]: List of comment schemas.
+            list[CommentSchema]: List of comments for the specified task.
 
         Raises:
             HTTPException: If the task is not found or access is denied.
@@ -109,7 +112,7 @@ class CommentService:
             team_id (int): ID of the team the task belongs to.
 
         Raises:
-            HTTPException: If the comment does not exist or access is denied.
+            HTTPException: If the comment is not found or access is denied.
         """
         try:
             deleted = await self.manager.delete_comment(comment_id, task_id, team_id)

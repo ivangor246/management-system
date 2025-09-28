@@ -27,13 +27,13 @@ async def create_meeting(
     Create a new meeting for a team.
 
     Args:
-        service (MeetingService): Meeting service dependency.
-        meeting_data (MeetingCreateSchema): Data for creating the meeting.
+        service (MeetingService): Dependency providing meeting operations.
+        meeting_data (MeetingCreateSchema): Data for the new meeting.
         team_id (int): ID of the team the meeting belongs to.
-        manager (User): Authenticated user with manager or admin role.
+        manager (User): Authenticated user with manager privileges.
 
     Returns:
-        MeetingCreateSuccessSchema: The created meeting's ID.
+        MeetingCreateSuccessSchema: Schema containing the ID of the created meeting.
     """
     return await service.create_meeting(meeting_data, team_id)
 
@@ -47,15 +47,15 @@ async def get_meetings_by_team(
     o: int = 0,
 ) -> list[MeetingSchema]:
     """
-    Get all meetings for a specific team.
+    Retrieve all meetings for a specific team.
 
     Args:
-        service (MeetingService): Meeting service dependency.
-        team_id (int): ID of the team to retrieve meetings for.
-        member (User): Authenticated user who is a member of the team.
+        service (MeetingService): Dependency providing meeting operations.
+        team_id (int): ID of the team.
+        member (User): Authenticated user performing the request.
 
     Returns:
-        List[MeetingSchema]: List of meetings for the team.
+        list[MeetingSchema]: List of meetings for the team.
     """
     return await service.get_meetings_by_team(team_id, l, o)
 
@@ -69,15 +69,15 @@ async def get_my_meetings_in_team(
     o: int = 0,
 ) -> list[MeetingSchema]:
     """
-    Get meetings in a team where the authenticated user is a participant.
+    Retrieve meetings in a team where the authenticated user is a participant.
 
     Args:
-        service (MeetingService): Meeting service dependency.
+        service (MeetingService): Dependency providing meeting operations.
         team_id (int): ID of the team.
-        member (User): Authenticated user.
+        member (User): Authenticated user performing the request.
 
     Returns:
-        List[MeetingSchema]: List of meetings the user participates in.
+        list[MeetingSchema]: List of meetings the user is participating in.
     """
     return await service.get_meetings_by_member(member.id, team_id, l, o)
 
@@ -91,17 +91,17 @@ async def update_meeting(
     manager: Annotated[User, Depends(require_manager)],
 ) -> MeetingUpdateSuccessSchema:
     """
-    Update a meeting in a team.
+    Update an existing meeting in a team.
 
     Args:
-        service (MeetingService): Meeting service dependency.
+        service (MeetingService): Dependency providing meeting operations.
         meeting_data (MeetingUpdateSchema): Updated data for the meeting.
         meeting_id (int): ID of the meeting to update.
         team_id (int): ID of the team the meeting belongs to.
-        manager (User): Authenticated user with manager or admin role.
+        manager (User): Authenticated user with manager privileges.
 
     Returns:
-        MeetingUpdateSuccessSchema: Success response.
+        MeetingUpdateSuccessSchema: Confirmation of the update.
     """
     return await service.update_meeting(meeting_data, meeting_id, team_id)
 
@@ -117,9 +117,9 @@ async def delete_meeting(
     Delete a meeting from a team.
 
     Args:
-        service (MeetingService): Meeting service dependency.
+        service (MeetingService): Dependency providing meeting operations.
         meeting_id (int): ID of the meeting to delete.
         team_id (int): ID of the team the meeting belongs to.
-        member (User): Authenticated user with manager or admin role.
+        member (User): Authenticated user with manager privileges.
     """
     await service.delete_meeting(meeting_id, team_id)

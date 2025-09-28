@@ -16,10 +16,10 @@ from app.schemas.tasks import (
 
 class TaskService:
     """
-    Service responsible for handling tasks within a team.
+    Service layer responsible for handling task-related operations within a team.
 
     Attributes:
-        manager (TaskManager): Manager responsible for task database operations.
+        manager (TaskManager): Manager responsible for database operations on tasks.
 
     Methods:
         create_task(task_data: TaskCreateSchema, team_id: int) -> TaskCreateSuccessSchema:
@@ -30,24 +30,24 @@ class TaskService:
             Retrieves tasks assigned to a specific performer within a team.
         update_task(task_id: int, task_data: TaskUpdateSchema) -> TaskUpdateSuccessSchema:
             Updates an existing task.
-        delete_task(task_id: int) -> None:
+        delete_task(task_id: int, team_id: int) -> None:
             Deletes a task by its ID.
-        update_task_evaluation(task_id: int, task_evaluation: EvaluationSchema) -> EvaluationSuccessSchema:
-            Updates the evaluation of a specific task.
+        update_task_evaluation(task_id: int, team_id: int, evaluator_id: int, evaluation_data: EvaluationSchema) -> EvaluationSuccessSchema:
+            Updates or creates an evaluation for a specific task.
     """
 
     def __init__(self, manager: TaskManager):
         """
-        Initializes the TaskService with a TaskManager.
+        Initialize the TaskService with a TaskManager.
 
         Args:
-            manager (TaskManager): The manager instance for handling task operations.
+            manager (TaskManager): Manager instance for handling task operations.
         """
         self.manager = manager
 
     async def create_task(self, task_data: TaskCreateSchema, team_id: int) -> TaskCreateSuccessSchema:
         """
-        Creates a new task for the specified team.
+        Create a new task for the specified team.
 
         Args:
             task_data (TaskCreateSchema): Data required to create the task.
@@ -80,14 +80,15 @@ class TaskService:
 
     async def get_tasks_by_team(self, team_id: int, limit: int = 0, offset: int = 0) -> list[TaskSchema]:
         """
-        Retrieves all tasks for a given team.
+        Retrieve all tasks for a given team.
 
         Args:
             team_id (int): ID of the team.
+            limit (int, optional): Maximum number of tasks to retrieve. Defaults to 0 (no limit).
+            offset (int, optional): Number of tasks to skip before returning results. Defaults to 0.
 
         Returns:
-            list[TaskSchema]: List of TaskSchema objects. Each task includes its evaluation value
-            if it exists.
+            list[TaskSchema]: List of TaskSchema objects including evaluation if it exists.
         """
         tasks = await self.manager.get_tasks_by_team(team_id, limit, offset)
         return [TaskSchema.model_validate(task) for task in tasks]
@@ -96,22 +97,23 @@ class TaskService:
         self, performer_id: int, team_id: int, limit: int = 0, offset: int = 0
     ) -> list[TaskSchema]:
         """
-        Retrieves tasks assigned to a specific performer within a team.
+        Retrieve tasks assigned to a specific performer within a team.
 
         Args:
             performer_id (int): ID of the performer.
             team_id (int): ID of the team.
+            limit (int, optional): Maximum number of tasks to retrieve. Defaults to 0 (no limit).
+            offset (int, optional): Number of tasks to skip before returning results. Defaults to 0.
 
         Returns:
-            list[TaskSchema]: List of TaskSchema objects. Each task includes its evaluation value
-            if it exists.
+            list[TaskSchema]: List of TaskSchema objects including evaluation if it exists.
         """
         tasks = await self.manager.get_tasks_by_performer(performer_id, team_id, limit, offset)
         return [TaskSchema.model_validate(task) for task in tasks]
 
     async def update_task(self, task_data: TaskUpdateSchema, task_id: int, team_id: int) -> TaskUpdateSuccessSchema:
         """
-        Updates an existing task.
+        Update an existing task.
 
         Args:
             task_data (TaskUpdateSchema): Data to update the task with.
@@ -122,7 +124,7 @@ class TaskService:
             TaskUpdateSuccessSchema: Confirmation schema.
 
         Raises:
-            HTTPException: If the task is not found or an error occurs during update.
+            HTTPException: If the task is not found, access is denied, or an error occurs.
         """
         try:
             task = await self.manager.update_task(task_data, task_id, team_id)
@@ -151,7 +153,7 @@ class TaskService:
 
     async def delete_task(self, task_id: int, team_id: int) -> None:
         """
-        Deletes a task by its ID.
+        Delete a task by its ID.
 
         Args:
             task_id (int): ID of the task to delete.
@@ -182,20 +184,19 @@ class TaskService:
         self, task_id: int, team_id: int, evaluator_id: int, evaluation_data: EvaluationSchema
     ) -> EvaluationSuccessSchema:
         """
-        Updates an existing evaluation of a task or creates it if it does not exist.
+        Update or create an evaluation for a task.
 
         Args:
             task_id (int): ID of the task.
             team_id (int): ID of the team the task belongs to.
             evaluator_id (int): ID of the evaluator performing the evaluation.
-            evaluation_data (EvaluationSchema): New evaluation data (value).
+            evaluation_data (EvaluationSchema): Evaluation data.
 
         Returns:
-            EvaluationSuccessSchema: Confirmation schema indicating the evaluation was successfully
-            created or updated.
+            EvaluationSuccessSchema: Confirmation schema indicating evaluation was successfully created or updated.
 
         Raises:
-            HTTPException: If an error occurs during task updating.
+            HTTPException: If an error occurs during evaluation update.
         """
         try:
             await self.manager.update_task_evaluation(task_id, team_id, evaluator_id, evaluation_data)

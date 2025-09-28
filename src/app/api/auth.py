@@ -17,8 +17,8 @@ async def authenticate(
     Authenticate a user using email and password.
 
     Args:
-        service (AuthService): The authentication service dependency.
-        credentials (CredentialsSchema): User credentials with email and password.
+        service (AuthService): Dependency providing authentication operations.
+        credentials (CredentialsSchema): User credentials containing email and password.
 
     Returns:
         TokenSchema: JWT access token if authentication is successful.
@@ -35,13 +35,16 @@ async def logout(
     service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> LogoutSuccessSchema:
     """
-    Logout user by blacklisting their JWT token.
+    Logout a user by blacklisting their JWT token.
 
     Args:
-        token (str): JWT token sent in the request.
-        service (AuthService): AuthService instance.
+        token (str): JWT access token to blacklist.
+        service (AuthService): Authentication service instance.
 
     Returns:
-        LogoutSuccessSchema: Success message.
+        LogoutSuccessSchema: Schema confirming successful logout.
+
+    Raises:
+        HTTPException: If the token is invalid or expired.
     """
     return await service.logout(token)

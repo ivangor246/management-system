@@ -13,9 +13,10 @@ from app.schemas.comments import CommentCreateSchema
 
 class CommentManager:
     """
-    Manager for handling task comments.
+    Manager for handling comments related to tasks.
 
-    Provides operations for creating, retrieving, and deleting comments.
+    Provides operations for creating, retrieving, and deleting comments,
+    as well as validating that a task belongs to a given team.
     """
 
     def __init__(self, session: AsyncSession):
@@ -29,25 +30,25 @@ class CommentManager:
 
     async def __check_task_in_team(self, task_id: int, team_id: int):
         """
-        Check whether a task exists and belongs to the given team.
+        Verify that a task exists and belongs to the given team.
 
         Args:
-            task_id (int): ID of the task to check.
-            team_id (int): ID of the team to validate against.
+            task_id (int): ID of the task.
+            team_id (int): ID of the team.
 
         Raises:
-            LookupError: If the task is not found.
-            PermissionError: If the task does not belong to the given team.
+            LookupError: If the task does not exist.
+            PermissionError: If the task belongs to another team.
         """
         stmt = select(Task).where(Task.id == task_id)
         result = await self.session.execute(stmt)
         task = result.scalar_one_or_none()
 
         if not task:
-            raise LookupError('The task not found')
+            raise LookupError('Task not found')
 
         if task.team_id != team_id:
-            raise PermissionError('The task does not belong to the team')
+            raise PermissionError('Task does not belong to the given team')
 
     async def create_comment(
         self, comment_data: CommentCreateSchema, user_id: int, task_id: int, team_id: int
@@ -56,7 +57,7 @@ class CommentManager:
         Create a new comment for a task.
 
         Args:
-            comment_data (CommentCreateSchema): Data for creating a comment.
+            comment_data (CommentCreateSchema): Data for creating the comment.
             user_id (int): ID of the user creating the comment.
             task_id (int): ID of the related task.
             team_id (int): ID of the team the task belongs to.
@@ -65,9 +66,9 @@ class CommentManager:
             Comment: The created comment instance.
 
         Raises:
-            LookupError: If the task is not found.
-            PermissionError: If the task does not belong to the given team.
-            SQLAlchemyError: If an error occurs while committing to the database.
+            LookupError: If the task does not exist.
+            PermissionError: If the task belongs to another team.
+            SQLAlchemyError: If an error occurs during database commit.
         """
         await self.__check_task_in_team(task_id, team_id)
 
@@ -89,18 +90,20 @@ class CommentManager:
 
     async def get_comments_by_task(self, task_id: int, team_id: int, limit: int = 0, offset: int = 0) -> list[Comment]:
         """
-        Retrieve all comments for a given task.
+        Retrieve comments for a given task.
 
         Args:
-            task_id (int): ID of the task to retrieve comments for.
+            task_id (int): ID of the task.
             team_id (int): ID of the team the task belongs to.
+            limit (int, optional): Maximum number of comments to return. Defaults to 0 (no limit).
+            offset (int, optional): Number of comments to skip for pagination. Defaults to 0.
 
         Returns:
             list[Comment]: A list of comments ordered by creation date.
 
         Raises:
-            LookupError: If the task is not found.
-            PermissionError: If the task does not belong to the given team.
+            LookupError: If the task does not exist.
+            PermissionError: If the task belongs to another team.
         """
         await self.__check_task_in_team(task_id, team_id)
 
@@ -114,7 +117,7 @@ class CommentManager:
 
     async def delete_comment(self, comment_id: int, task_id: int, team_id: int) -> bool:
         """
-        Delete a comment by its ID and related task ID.
+        Delete a comment by its ID.
 
         Args:
             comment_id (int): ID of the comment to delete.
@@ -125,9 +128,9 @@ class CommentManager:
             bool: True if the comment was found and deleted, False otherwise.
 
         Raises:
-            LookupError: If the task is not found.
-            PermissionError: If the task does not belong to the given team.
-            SQLAlchemyError: If an error occurs while committing the deletion.
+            LookupError: If the task does not exist.
+            PermissionError: If the task belongs to another team.
+            SQLAlchemyError: If an error occurs during database commit.
         """
         await self.__check_task_in_team(task_id, team_id)
 
@@ -149,7 +152,8 @@ class CommentManager:
 
 
 def get_comment_manager(session: Annotated[AsyncSession, Depends(get_session)]) -> CommentManager:
-    """Dependency provider for CommentManager.
+    """
+    Dependency provider for CommentManager.
 
     Args:
         session (AsyncSession): SQLAlchemy async session.
