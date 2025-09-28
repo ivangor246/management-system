@@ -120,21 +120,21 @@ class TestTaskService:
         await session.commit()
 
         update_data = TaskUpdateSchema(description='New desc')
-        response = await service.update_task(task.id, update_data)
+        response = await service.update_task(update_data, task.id, team.id)
 
         assert response.detail == 'The task has been successfully updated'
 
         updated_task = await session.get(Task, task.id)
         assert updated_task.description == 'New desc'
 
-    async def test_update_task_not_found(self, session: AsyncSession):
+    async def test_update_task_not_found(self, session: AsyncSession, team: Team):
         manager = TaskManager(session)
         service = TaskService(manager)
 
         update_data = TaskUpdateSchema(description='New desc')
 
         with pytest.raises(HTTPException) as exc_info:
-            await service.update_task(999, update_data)
+            await service.update_task(update_data, 999, team.id)
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
 
     async def test_delete_task(self, session: AsyncSession, team: Team, user: User):
@@ -150,17 +150,17 @@ class TestTaskService:
         session.add(task)
         await session.commit()
 
-        await service.delete_task(task.id)
+        await service.delete_task(task.id, team.id)
 
         deleted_task = await session.get(Task, task.id)
         assert deleted_task is None
 
-    async def test_delete_task_not_found(self, session: AsyncSession):
+    async def test_delete_task_not_found(self, session: AsyncSession, team: Team):
         manager = TaskManager(session)
         service = TaskService(manager)
 
         with pytest.raises(HTTPException) as exc_info:
-            await service.delete_task(999)
+            await service.delete_task(999, team.id)
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
 
     async def test_update_task_evaluation(self, session: AsyncSession, team: Team, user: User):
@@ -177,7 +177,7 @@ class TestTaskService:
         await session.commit()
 
         evaluation_data = EvaluationSchema(value=4)
-        response = await service.update_task_evaluation(task.id, user.id, evaluation_data)
+        response = await service.update_task_evaluation(task.id, team.id, user.id, evaluation_data)
         assert response.detail == 'The task evaluation has been successfully updated'
 
         updated_task = await session.scalar(
@@ -191,5 +191,5 @@ class TestTaskService:
 
         evaluation_data = EvaluationSchema(value=3)
         with pytest.raises(HTTPException) as exc_info:
-            await service.update_task_evaluation(999, 1, evaluation_data)
+            await service.update_task_evaluation(999, 1, 1, evaluation_data)
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND

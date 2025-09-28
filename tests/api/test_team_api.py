@@ -96,7 +96,7 @@ class TestTeamsAPI:
         manager_user, manager_token = await self._create_user_and_token(session, user_data)
         team_manager = TeamManager(session)
         team = await team_manager.create_team(TeamCreateSchema(name='Team 1'), manager_user)
-        await team_manager.assign_role(manager_user.id, team.id, UserRoles.MANAGER)
+        await team_manager.assign_role(manager_user.id, team.id, UserRoles.ADMIN)
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as ac:
             response = await ac.delete(

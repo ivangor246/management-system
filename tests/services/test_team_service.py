@@ -181,5 +181,5 @@ class TestTeamService:
         session.add_all([evaluation_1, evaluation_2])
         await session.commit()
 
-        avg = await service.get_avg_evaluation(user.id, team.id, today, today + timedelta(days=2))
+        avg = await service.get_avg_evaluation(user.id, team.id)
         assert avg == 3.0

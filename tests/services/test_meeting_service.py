@@ -1,4 +1,4 @@
-from datetime import date, time
+from datetime import date, time, timedelta
 
 import pytest
 import pytest_asyncio
@@ -52,7 +52,7 @@ async def meeting(session: AsyncSession, team: Team, user: User) -> Meeting:
     manager = MeetingManager(session)
     meeting_data = MeetingCreateSchema(
         name='meeting_name1',
-        date=date.today(),
+        date=date.today() + timedelta(days=5),
         time=time(hour=10, minute=0),
         member_ids=[user.id],
     )
@@ -67,7 +67,7 @@ class TestMeetingService:
         service = MeetingService(manager)
         meeting_data = MeetingCreateSchema(
             name='meeting_name2',
-            date=date.today(),
+            date=date.today() + timedelta(days=6),
             time=time(hour=11, minute=0),
             member_ids=[user.id],
         )
@@ -99,6 +99,6 @@ class TestMeetingService:
     async def test_delete_meeting(self, session: AsyncSession, meeting: Meeting):
         manager = MeetingManager(session)
         service = MeetingService(manager)
-        await service.delete_meeting(meeting.id)
+        await service.delete_meeting(meeting.id, meeting.team_id)
         meetings = await service.manager.get_meetings_by_team(meeting.team_id)
         assert meeting.id not in [m.id for m in meetings]

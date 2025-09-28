@@ -5,6 +5,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from app.core.config import config
+from app.core.redis import redis
 from app.models.base import Base
 
 
@@ -29,3 +30,10 @@ async def clean_database(session: AsyncSession):
     for table in reversed(Base.metadata.sorted_tables):
         await session.execute(text(f'TRUNCATE TABLE "{table.name}" RESTART IDENTITY CASCADE'))
     await session.commit()
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def close_redis():
+    yield
+    await redis.aclose()
+    await redis.connection_pool.disconnect()

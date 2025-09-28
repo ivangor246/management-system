@@ -14,7 +14,7 @@ from app.managers.users import UserManager
 from app.models.users import User
 from app.schemas.evaluations import EvaluationSchema
 from app.schemas.tasks import TaskCreateSchema, TaskStatuses, TaskUpdateSchema
-from app.schemas.teams import TeamCreateSchema, UserRoles
+from app.schemas.teams import TeamCreateSchema
 from app.schemas.users import UserCreateSchema
 
 
@@ -45,19 +45,20 @@ class TestTasksAPI:
         token = TokenMixin().generate_access_token(user.email)
         return user, token
 
-    async def _create_team_with_manager(self, session: AsyncSession, manager_user: User):
+    async def _create_team(self, session: AsyncSession, admin_user: User):
         team_manager = TeamManager(session)
-        team = await team_manager.create_team(TeamCreateSchema(name='Test Team'), manager_user)
-        await team_manager.assign_role(manager_user.id, team.id, UserRoles.MANAGER)
+        team = await team_manager.create_team(TeamCreateSchema(name='Test Team'), admin_user)
         return team
 
     async def test_create_task(self, app: FastAPI, session: AsyncSession, user_data):
-        manager_user, token = await self._create_user_and_token(session, user_data)
-        team = await self._create_team_with_manager(session, manager_user)
+        admin_user, token = await self._create_user_and_token(session, user_data)
+        team = await self._create_team(session, admin_user)
 
         task_data = TaskCreateSchema(
             description='Test Task',
             deadline=date.today() + timedelta(days=7),
+            status=TaskStatuses.OPEN,
+            performer_id=admin_user.id,
         )
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as ac:
@@ -71,10 +72,18 @@ class TestTasksAPI:
         assert 'task_id' in response.json()
 
     async def test_get_tasks_by_team(self, app: FastAPI, session: AsyncSession, user_data):
-        manager_user, token = await self._create_user_and_token(session, user_data)
-        team = await self._create_team_with_manager(session, manager_user)
+        admin_user, token = await self._create_user_and_token(session, user_data)
+        team = await self._create_team(session, admin_user)
         task_manager = TaskManager(session)
-        await task_manager.create_task(TaskCreateSchema(description='Task 1', deadline=date.today()), team.id)
+        await task_manager.create_task(
+            TaskCreateSchema(
+                description='Test Task',
+                deadline=date.today() + timedelta(days=7),
+                status=TaskStatuses.OPEN,
+                performer_id=admin_user.id,
+            ),
+            team.id,
+        )
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as ac:
             response = await ac.get(
@@ -85,14 +94,20 @@ class TestTasksAPI:
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert len(data) >= 1
-        assert data[0]['description'] == 'Task 1'
+        assert data[0]['description'] == 'Test Task'
 
     async def test_get_my_tasks_in_team(self, app: FastAPI, session: AsyncSession, user_data):
-        manager_user, token = await self._create_user_and_token(session, user_data)
-        team = await self._create_team_with_manager(session, manager_user)
+        admin_user, token = await self._create_user_and_token(session, user_data)
+        team = await self._create_team(session, admin_user)
         task_manager = TaskManager(session)
         await task_manager.create_task(
-            TaskCreateSchema(description='Task 2', deadline=date.today(), performer_id=manager_user.id), team.id
+            TaskCreateSchema(
+                description='Test Task',
+                deadline=date.today() + timedelta(days=7),
+                status=TaskStatuses.OPEN,
+                performer_id=admin_user.id,
+            ),
+            team.id,
         )
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as ac:
@@ -104,13 +119,21 @@ class TestTasksAPI:
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert len(data) == 1
-        assert data[0]['performer_id'] == manager_user.id
+        assert data[0]['performer_id'] == admin_user.id
 
     async def test_update_task(self, app: FastAPI, session: AsyncSession, user_data):
-        manager_user, token = await self._create_user_and_token(session, user_data)
-        team = await self._create_team_with_manager(session, manager_user)
+        admin_user, token = await self._create_user_and_token(session, user_data)
+        team = await self._create_team(session, admin_user)
         task_manager = TaskManager(session)
-        task = await task_manager.create_task(TaskCreateSchema(description='Task 3', deadline=date.today()), team.id)
+        task = await task_manager.create_task(
+            TaskCreateSchema(
+                description='Test Task',
+                deadline=date.today() + timedelta(days=7),
+                status=TaskStatuses.OPEN,
+                performer_id=admin_user.id,
+            ),
+            team.id,
+        )
 
         task_update = TaskUpdateSchema(description='Updated Task 3', status=TaskStatuses.WORK)
 
@@ -125,10 +148,18 @@ class TestTasksAPI:
         assert response.json()['detail'] == 'The task has been successfully updated'
 
     async def test_delete_task(self, app: FastAPI, session: AsyncSession, user_data):
-        manager_user, token = await self._create_user_and_token(session, user_data)
-        team = await self._create_team_with_manager(session, manager_user)
+        admin_user, token = await self._create_user_and_token(session, user_data)
+        team = await self._create_team(session, admin_user)
         task_manager = TaskManager(session)
-        task = await task_manager.create_task(TaskCreateSchema(description='Task 5', deadline=date.today()), team.id)
+        task = await task_manager.create_task(
+            TaskCreateSchema(
+                description='Test Task',
+                deadline=date.today() + timedelta(days=7),
+                status=TaskStatuses.OPEN,
+                performer_id=admin_user.id,
+            ),
+            team.id,
+        )
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as ac:
             response = await ac.delete(
@@ -139,10 +170,18 @@ class TestTasksAPI:
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
     async def test_update_task_evaluation(self, app: FastAPI, session: AsyncSession, user_data):
-        manager_user, token = await self._create_user_and_token(session, user_data)
-        team = await self._create_team_with_manager(session, manager_user)
+        admin_user, token = await self._create_user_and_token(session, user_data)
+        team = await self._create_team(session, admin_user)
         task_manager = TaskManager(session)
-        task = await task_manager.create_task(TaskCreateSchema(description='Task 4', deadline=date.today()), team.id)
+        task = await task_manager.create_task(
+            TaskCreateSchema(
+                description='Test Task',
+                deadline=date.today() + timedelta(days=7),
+                status=TaskStatuses.OPEN,
+                performer_id=admin_user.id,
+            ),
+            team.id,
+        )
 
         evaluation_data = EvaluationSchema(value=5)
 
