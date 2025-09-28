@@ -30,3 +30,8 @@ logs-test:
 
 clear-test:
 	docker compose -f docker-compose.test.yml down -v --rmi all --remove-orphans
+
+
+#alembic
+makemigration:
+	docker compose run --rm -e PYTHONPATH=/project/src --entrypoint "" app poetry run alembic revision --autogenerate -m "$(name)"

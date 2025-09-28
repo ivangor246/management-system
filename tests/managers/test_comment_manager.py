@@ -67,12 +67,17 @@ def comment_data() -> CommentCreateSchema:
 @pytest.mark.asyncio
 class TestCommentManager:
     async def test_create_comment(
-        self, session: AsyncSession, comment_data: CommentCreateSchema, task: Task, users: list[User]
+        self,
+        session: AsyncSession,
+        comment_data: CommentCreateSchema,
+        task: Task,
+        users: list[User],
+        team: Team,
     ):
         manager = CommentManager(session)
 
-        new_comment_1 = await manager.create_comment(comment_data, users[1].id, task.id)
-        new_comment_2 = await manager.create_comment(comment_data, users[2].id, task.id)
+        new_comment_1 = await manager.create_comment(comment_data, users[1].id, task.id, team.id)
+        new_comment_2 = await manager.create_comment(comment_data, users[2].id, task.id, team.id)
 
         assert isinstance(new_comment_1, Comment)
         assert isinstance(new_comment_2, Comment)
@@ -87,14 +92,19 @@ class TestCommentManager:
         assert comment_in_task_count == 2
 
     async def test_get_comments_by_task(
-        self, session: AsyncSession, comment_data: CommentCreateSchema, task: Task, users: list[User]
+        self,
+        session: AsyncSession,
+        comment_data: CommentCreateSchema,
+        task: Task,
+        users: list[User],
+        team: Team,
     ):
         manager = CommentManager(session)
-        await manager.create_comment(comment_data, users[1].id, task.id)
-        await manager.create_comment(comment_data, users[1].id, task.id)
-        await manager.create_comment(comment_data, users[2].id, task.id)
+        await manager.create_comment(comment_data, users[1].id, task.id, team.id)
+        await manager.create_comment(comment_data, users[1].id, task.id, team.id)
+        await manager.create_comment(comment_data, users[2].id, task.id, team.id)
 
-        task_comments = await manager.get_comments_by_task(task.id)
+        task_comments = await manager.get_comments_by_task(task.id, team.id)
 
         assert len(task_comments) == 3
         assert isinstance(task_comments[0], Comment)
@@ -103,16 +113,21 @@ class TestCommentManager:
         assert task_comments[2].task_id == task.id
 
     async def test_delete_comment(
-        self, session: AsyncSession, comment_data: CommentCreateSchema, task: Task, users: list[User]
+        self,
+        session: AsyncSession,
+        comment_data: CommentCreateSchema,
+        task: Task,
+        users: list[User],
+        team: Team,
     ):
         manager = CommentManager(session)
-        new_comment_1 = await manager.create_comment(comment_data, users[1].id, task.id)
-        new_comment_2 = await manager.create_comment(comment_data, users[2].id, task.id)
+        new_comment_1 = await manager.create_comment(comment_data, users[1].id, task.id, team.id)
+        new_comment_2 = await manager.create_comment(comment_data, users[2].id, task.id, team.id)
 
-        await manager.delete_comment(new_comment_1.id)
-        comments = await manager.get_comments_by_task(task.id)
+        await manager.delete_comment(new_comment_1.id, task.id, team.id)
+        comments = await manager.get_comments_by_task(task.id, team.id)
         assert len(comments) == 1
 
-        await manager.delete_comment(new_comment_2.id)
-        comments = await manager.get_comments_by_task(task.id)
+        await manager.delete_comment(new_comment_2.id, task.id, team.id)
+        comments = await manager.get_comments_by_task(task.id, team.id)
         assert len(comments) == 0

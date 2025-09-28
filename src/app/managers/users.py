@@ -14,19 +14,21 @@ from app.schemas.users import UserCreateSchema, UserUpdateSchema
 
 class UserManager(HashingMixin):
     """
-    Service class for managing user-related operations in the application.
-    Provides functionality to create, update, delete users, and validate credentials.
+    Manager class for user-related operations.
+
+    Provides methods to create, update, delete users,
+    and validate user credentials.
 
     Inherits:
-        HashingMixin: Provides password hashing and verification methods.
+        HashingMixin: Provides password hashing and verification utilities.
     """
 
     def __init__(self, session: AsyncSession):
         """
-        Initialize UserManager with an async database session.
+        Initialize UserManager with an asynchronous database session.
 
         Args:
-            session (AsyncSession): SQLAlchemy async session.
+            session (AsyncSession): SQLAlchemy asynchronous session.
         """
         self.session = session
 
@@ -64,7 +66,7 @@ class UserManager(HashingMixin):
 
     async def check_user_by_credentials(self, credentials: CredentialsSchema) -> bool:
         """
-        Verify user credentials (email and password).
+        Verify user credentials by email and password.
 
         Args:
             credentials (CredentialsSchema): User credentials schema.
@@ -83,17 +85,17 @@ class UserManager(HashingMixin):
 
     async def update_user(self, user: User, user_data: UserUpdateSchema) -> User:
         """
-        Update an existing user with new data.
+        Update an existing user with new values.
 
         Args:
-            user (User): The user instance to be updated.
+            user (User): The user instance to update.
             user_data (UserUpdateSchema): Pydantic schema with updated fields.
 
         Returns:
             User: The updated user instance.
 
         Raises:
-            IntegrityError: If updated values violate unique constraints.
+            IntegrityError: If updated values violate unique constraints (e.g., duplicate email/username).
         """
         if user_data.username is not None:
             user.username = user_data.username
@@ -120,7 +122,7 @@ class UserManager(HashingMixin):
         Permanently delete a user from the database.
 
         Args:
-            user (User): The user instance to be deleted.
+            user (User): The user instance to delete.
 
         Returns:
             None
@@ -131,12 +133,12 @@ class UserManager(HashingMixin):
 
 def get_user_manager(session: Annotated[AsyncSession, Depends(get_session)]) -> UserManager:
     """
-    Dependency injection provider for UserManager.
+    Dependency provider for UserManager.
 
     Args:
-        session (AsyncSession): SQLAlchemy async session dependency.
+        session (AsyncSession): SQLAlchemy asynchronous session dependency.
 
     Returns:
-        UserManager: Instance of UserManager with an active session.
+        UserManager: Instance of UserManager with the provided session.
     """
     return UserManager(session=session)

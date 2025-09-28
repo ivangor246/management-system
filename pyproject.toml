@@ -31,6 +31,10 @@ itsdangerous = "^2.2.0"
 pytest = "^8.4.1"
 pytest-asyncio = "^1.1.0"
 httpx = "^0.28.1"
+redis = {extras = ["asyncio"], version = "^6.4.0"}
+alembic = "^1.16.5"
+psycopg = {extras = ["binary"], version = "^3.2.10"}
+psycopg2 = "^2.9.10"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.12.7"

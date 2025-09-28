@@ -3,7 +3,9 @@ from datetime import date
 import pytest
 import pytest_asyncio
 from fastapi import HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.managers.tasks import TaskManager
 from app.managers.teams import TeamManager
@@ -11,9 +13,9 @@ from app.managers.users import UserManager
 from app.models.tasks import Task, TaskStatuses
 from app.models.teams import Team
 from app.models.users import User
+from app.schemas.evaluations import EvaluationSchema
 from app.schemas.tasks import (
     TaskCreateSchema,
-    TaskScoreSchema,
     TaskUpdateSchema,
 )
 from app.schemas.teams import TeamCreateSchema
@@ -33,7 +35,7 @@ def user_data():
 
 
 @pytest_asyncio.fixture
-async def user(session: AsyncSession, user_data) -> User:
+async def user(session: AsyncSession, user_data: UserCreateSchema) -> User:
     manager = UserManager(session)
     return await manager.create_user(user_data)
 
@@ -44,14 +46,14 @@ def team_data():
 
 
 @pytest_asyncio.fixture
-async def team(session: AsyncSession, user: User, team_data) -> Team:
+async def team(session: AsyncSession, user: User, team_data: TeamCreateSchema) -> Team:
     manager = TeamManager(session)
     return await manager.create_team(team_data, user)
 
 
 @pytest.mark.asyncio
 class TestTaskService:
-    async def test_create_task(self, session: AsyncSession, team, user):
+    async def test_create_task(self, session: AsyncSession, team: Team, user: User):
         manager = TaskManager(session)
         service = TaskService(manager)
 
@@ -70,7 +72,7 @@ class TestTaskService:
         assert task.description == task_data.description
         assert task.team_id == team.id
 
-    async def test_get_tasks_by_team(self, session: AsyncSession, team, user):
+    async def test_get_tasks_by_team(self, session: AsyncSession, team: Team, user: User):
         manager = TaskManager(session)
         service = TaskService(manager)
 
@@ -87,7 +89,7 @@ class TestTaskService:
         assert len(tasks) == 1
         assert tasks[0].description == 'Team task'
 
-    async def test_get_tasks_by_performer(self, session: AsyncSession, team, user):
+    async def test_get_tasks_by_performer(self, session: AsyncSession, team: Team, user: User):
         manager = TaskManager(session)
         service = TaskService(manager)
 
@@ -104,7 +106,7 @@ class TestTaskService:
         assert len(tasks) == 1
         assert tasks[0].performer_id == user.id
 
-    async def test_update_task(self, session: AsyncSession, team, user):
+    async def test_update_task(self, session: AsyncSession, team: Team, user: User):
         manager = TaskManager(session)
         service = TaskService(manager)
 
@@ -118,24 +120,24 @@ class TestTaskService:
         await session.commit()
 
         update_data = TaskUpdateSchema(description='New desc')
-        response = await service.update_task(task.id, update_data)
+        response = await service.update_task(update_data, task.id, team.id)
 
         assert response.detail == 'The task has been successfully updated'
 
         updated_task = await session.get(Task, task.id)
         assert updated_task.description == 'New desc'
 
-    async def test_update_task_not_found(self, session: AsyncSession):
+    async def test_update_task_not_found(self, session: AsyncSession, team: Team):
         manager = TaskManager(session)
         service = TaskService(manager)
 
         update_data = TaskUpdateSchema(description='New desc')
 
         with pytest.raises(HTTPException) as exc_info:
-            await service.update_task(999, update_data)
+            await service.update_task(update_data, 999, team.id)
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
 
-    async def test_delete_task(self, session: AsyncSession, team, user):
+    async def test_delete_task(self, session: AsyncSession, team: Team, user: User):
         manager = TaskManager(session)
         service = TaskService(manager)
 
@@ -148,25 +150,25 @@ class TestTaskService:
         session.add(task)
         await session.commit()
 
-        await service.delete_task(task.id)
+        await service.delete_task(task.id, team.id)
 
         deleted_task = await session.get(Task, task.id)
         assert deleted_task is None
 
-    async def test_delete_task_not_found(self, session: AsyncSession):
+    async def test_delete_task_not_found(self, session: AsyncSession, team: Team):
         manager = TaskManager(session)
         service = TaskService(manager)
 
         with pytest.raises(HTTPException) as exc_info:
-            await service.delete_task(999)
+            await service.delete_task(999, team.id)
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
 
-    async def test_update_task_score(self, session: AsyncSession, team, user):
+    async def test_update_task_evaluation(self, session: AsyncSession, team: Team, user: User):
         manager = TaskManager(session)
         service = TaskService(manager)
 
         task = Task(
-            description='Task with score',
+            description='Task with evaluation',
             deadline=date.today(),
             performer_id=user.id,
             team_id=team.id,
@@ -174,18 +176,20 @@ class TestTaskService:
         session.add(task)
         await session.commit()
 
-        score_data = TaskScoreSchema(score=4)
-        response = await service.update_task_score(task.id, score_data)
-        assert response.detail == 'The task score has been successfully updated'
+        evaluation_data = EvaluationSchema(value=4)
+        response = await service.update_task_evaluation(task.id, team.id, user.id, evaluation_data)
+        assert response.detail == 'The task evaluation has been successfully updated'
 
-        updated_task = await session.get(Task, task.id)
-        assert updated_task.score == 4
+        updated_task = await session.scalar(
+            select(Task).options(selectinload(Task.evaluation)).where(Task.id == task.id)
+        )
+        assert updated_task.evaluation.value == 4
 
-    async def test_update_task_score_not_found(self, session: AsyncSession):
+    async def test_update_task_evaluation_not_found(self, session: AsyncSession):
         manager = TaskManager(session)
         service = TaskService(manager)
 
-        score_data = TaskScoreSchema(score=3)
+        evaluation_data = EvaluationSchema(value=3)
         with pytest.raises(HTTPException) as exc_info:
-            await service.update_task_score(999, score_data)
+            await service.update_task_evaluation(999, 1, 1, evaluation_data)
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND

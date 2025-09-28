@@ -7,7 +7,8 @@ and registers admin views for the main models.
 
 from fastapi import FastAPI
 from sqladmin import Admin
-from sqlalchemy import select
+from sqlalchemy import inspect, select
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.core.config import config
 from app.core.database import engine, session_factory
@@ -24,8 +25,16 @@ async def create_admin_if_not_exists():
 
     Uses credentials from the application configuration. The admin user
     is assigned a default email and hashed password.
+    Runs only if the `users` table exists.
     """
     async with session_factory() as session:
+        try:
+            inspector = inspect(session.bind)
+            if 'users' not in inspector.get_table_names():
+                return
+        except SQLAlchemyError:
+            return
+
         stmt = select(User).where(User.username == config.ADMIN_NAME)
         result = await session.execute(stmt)
         admin = result.scalar_one_or_none()

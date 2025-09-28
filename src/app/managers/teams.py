@@ -1,11 +1,12 @@
-from datetime import date
 from typing import Annotated
 
 from fastapi import Depends
 from sqlalchemy import func, select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
+from app.models.evaluations import Evaluation
 from app.models.tasks import Task
 from app.models.teams import Team, UserTeam
 from app.models.users import User
@@ -13,20 +14,14 @@ from app.schemas.teams import TeamCreateSchema, UserRoles
 
 
 class TeamManager:
-    """
-    Manager class for handling operations related to Teams, Users, and their associations.
-
-    This class provides methods to create teams, assign user roles,
-    fetch users by team, fetch teams by user, calculate average scores,
-    and manage team-user associations.
-    """
+    """Manager class for handling operations related to Teams, Users, and their associations."""
 
     def __init__(self, session: AsyncSession):
         """
         Initialize the TeamManager with a given database session.
 
         Args:
-            session (AsyncSession): The SQLAlchemy asynchronous session.
+            session (AsyncSession): SQLAlchemy asynchronous session.
         """
         self.session = session
 
@@ -46,11 +41,10 @@ class TeamManager:
 
         try:
             await self.session.commit()
-        except:
+            await self.session.refresh(new_team)
+        except SQLAlchemyError:
             await self.session.rollback()
             raise
-
-        await self.session.refresh(new_team)
 
         await self.assign_role(user_id=user_to_admin.id, team_id=new_team.id, role=UserRoles.ADMIN)
 
@@ -74,25 +68,21 @@ class TeamManager:
 
         if existing_association:
             existing_association.role = role
-            new_user_team_association = existing_association
+            user_team_association = existing_association
         else:
-            new_user_team_association = UserTeam(
-                user_id=user_id,
-                team_id=team_id,
-                role=role,
-            )
-            self.session.add(new_user_team_association)
+            user_team_association = UserTeam(user_id=user_id, team_id=team_id, role=role)
+            self.session.add(user_team_association)
 
         try:
             await self.session.commit()
-            await self.session.refresh(new_user_team_association)
-        except:
+            await self.session.refresh(user_team_association)
+        except SQLAlchemyError:
             await self.session.rollback()
             raise
 
-        return new_user_team_association
+        return user_team_association
 
-    async def get_users(self, team_id: int) -> list[tuple[User, UserRoles]]:
+    async def get_users(self, team_id: int, limit: int = 0, offset: int = 0) -> list[tuple[User, UserRoles]]:
         """
         Get all users and their roles in a specific team.
 
@@ -103,17 +93,17 @@ class TeamManager:
             list[tuple[User, UserRoles]]: List of users with their assigned roles.
         """
         stmt = (
-            select(User, UserTeam.role)
-            .join(
-                UserTeam,
-                UserTeam.user_id == User.id,
-            )
-            .where(UserTeam.team_id == team_id)
+            select(User, UserTeam.role).join(UserTeam, UserTeam.user_id == User.id).where(UserTeam.team_id == team_id)
         )
+        if limit:
+            stmt = stmt.limit(limit)
+        if offset:
+            stmt = stmt.offset(offset)
+
         result = await self.session.execute(stmt)
         return [(user, role) for user, role in result.all()]
 
-    async def get_teams_by_user(self, user_id: int) -> list[tuple[Team, UserRoles]]:
+    async def get_teams_by_user(self, user_id: int, limit: int = 0, offset: int = 0) -> list[tuple[Team, UserRoles]]:
         """
         Get all teams that a specific user belongs to along with their roles.
 
@@ -124,13 +114,13 @@ class TeamManager:
             list[tuple[Team, UserRoles]]: List of teams with the user's role in each.
         """
         stmt = (
-            select(Team, UserTeam.role)
-            .join(
-                UserTeam,
-                UserTeam.team_id == Team.id,
-            )
-            .where(UserTeam.user_id == user_id)
+            select(Team, UserTeam.role).join(UserTeam, UserTeam.team_id == Team.id).where(UserTeam.user_id == user_id)
         )
+        if limit:
+            stmt = stmt.limit(limit)
+        if offset:
+            stmt = stmt.offset(offset)
+
         result = await self.session.execute(stmt)
         return [(team, role) for team, role in result.all()]
 
@@ -168,32 +158,27 @@ class TeamManager:
 
         try:
             await self.session.commit()
-        except Exception:
+        except SQLAlchemyError:
             await self.session.rollback()
             raise
 
         return True
 
-    async def get_avg_score(self, user_id: int, team_id: int, start_date: date, end_date: date) -> float:
+    async def get_avg_evaluation(self, user_id: int, team_id: int) -> float:
         """
-        Calculate the average score of tasks performed by a user in a specific team
-        within a date range.
+        Calculate the average evaluation of tasks performed by a user in a specific team.
 
         Args:
             user_id (int): ID of the user.
             team_id (int): ID of the team.
-            start_date (date): Start date for the calculation.
-            end_date (date): End date for the calculation.
 
         Returns:
-            float: The average score rounded to 2 decimal places, or 0.0 if no scores exist.
+            float: The average evaluation rounded to 2 decimal places, or 0.0 if no evaluation exists.
         """
-        stmt = select(func.avg(Task.score)).where(
-            Task.performer_id == user_id,
-            Task.team_id == team_id,
-            Task.score.isnot(None),
-            Task.deadline >= start_date,
-            Task.deadline <= end_date,
+        stmt = (
+            select(func.avg(Evaluation.value))
+            .join(Task, Task.id == Evaluation.task_id)
+            .where(Task.performer_id == user_id, Task.team_id == team_id)
         )
         result = await self.session.execute(stmt)
         avg = result.scalar_one_or_none()
@@ -205,7 +190,7 @@ def get_team_manager(session: Annotated[AsyncSession, Depends(get_session)]) -> 
     Dependency function to provide a TeamManager instance.
 
     Args:
-        session (AsyncSession): The SQLAlchemy asynchronous session.
+        session (AsyncSession): SQLAlchemy asynchronous session.
 
     Returns:
         TeamManager: An instance of TeamManager.

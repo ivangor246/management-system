@@ -1,4 +1,3 @@
-from datetime import date
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
@@ -18,10 +17,10 @@ from app.schemas.teams import (
 
 class TeamService:
     """
-    Service responsible for managing teams, their members, and related operations.
+    Service layer responsible for managing teams, their members, and related operations.
 
     Attributes:
-        manager (TeamManager): Manager responsible for team database operations.
+        manager (TeamManager): Manager responsible for database operations on teams.
 
     Methods:
         create_team(team_data: TeamCreateSchema, user_to_admin: User) -> TeamCreateSuccessSchema:
@@ -29,31 +28,31 @@ class TeamService:
         get_users(team_id: int) -> list[TeamMemberSchema]:
             Retrieves all users and their roles for a specific team.
         get_teams_by_user(user_id: int) -> list[TeamByMemberSchema]:
-            Retrieves all teams a user is part of along with their roles.
+            Retrieves all teams a user belongs to along with their roles.
         create_user_team_association(user_team_data: UserTeamCreateSchema, team_id: int) -> UserTeamCreateSuccessSchema:
             Assigns a user to a team with a specific role.
         remove_user_from_team(user_id: int, team_id: int) -> None:
             Removes a user from a team.
-        get_avg_score(user_id: int, team_id: int, start_date: date, end_date: date) -> float:
-            Calculates the average score of a user in a team over a given date range.
+        get_avg_evaluation(user_id: int, team_id: int) -> float:
+            Calculates the average evaluation of a user in a team.
     """
 
     def __init__(self, manager: TeamManager):
         """
-        Initializes the TeamService with a TeamManager.
+        Initialize the TeamService with a TeamManager.
 
         Args:
-            manager (TeamManager): The manager instance for handling team operations.
+            manager (TeamManager): Manager instance for handling team operations.
         """
         self.manager = manager
 
     async def create_team(self, team_data: TeamCreateSchema, user_to_admin: User) -> TeamCreateSuccessSchema:
         """
-        Creates a new team and assigns the specified user as an admin.
+        Create a new team and assign the specified user as admin.
 
         Args:
             team_data (TeamCreateSchema): Data required to create the team.
-            user_to_admin (User): User who will be assigned as team admin.
+            user_to_admin (User): User to assign as team admin.
 
         Returns:
             TeamCreateSuccessSchema: Schema containing the ID of the newly created team.
@@ -70,12 +69,14 @@ class TeamService:
             )
         return TeamCreateSuccessSchema(team_id=new_team.id)
 
-    async def get_users(self, team_id: int) -> list[TeamMemberSchema]:
+    async def get_users(self, team_id: int, limit: int = 0, offset: int = 0) -> list[TeamMemberSchema]:
         """
-        Retrieves all users and their roles for a specific team.
+        Retrieve all users and their roles for a specific team.
 
         Args:
             team_id (int): ID of the team.
+            limit (int, optional): Maximum number of users to retrieve. Defaults to 0 (no limit).
+            offset (int, optional): Number of users to skip. Defaults to 0.
 
         Returns:
             list[TeamMemberSchema]: List of team members with their roles.
@@ -83,7 +84,7 @@ class TeamService:
         Raises:
             HTTPException: If the team is not found.
         """
-        users_and_roles = await self.manager.get_users(team_id)
+        users_and_roles = await self.manager.get_users(team_id, limit, offset)
 
         if not users_and_roles:
             raise HTTPException(
@@ -101,17 +102,19 @@ class TeamService:
         ]
         return members
 
-    async def get_teams_by_user(self, user_id: int) -> list[TeamByMemberSchema]:
+    async def get_teams_by_user(self, user_id: int, limit: int = 0, offset: int = 0) -> list[TeamByMemberSchema]:
         """
-        Retrieves all teams a user is part of along with their roles.
+        Retrieve all teams a user belongs to along with their roles.
 
         Args:
             user_id (int): ID of the user.
+            limit (int, optional): Maximum number of teams to retrieve. Defaults to 0 (no limit).
+            offset (int, optional): Number of teams to skip. Defaults to 0.
 
         Returns:
             list[TeamByMemberSchema]: List of teams with the user's role in each.
         """
-        teams_and_roles = await self.manager.get_teams_by_user(user_id)
+        teams_and_roles = await self.manager.get_teams_by_user(user_id, limit, offset)
         teams = [
             TeamByMemberSchema(
                 team_id=team.id,
@@ -126,7 +129,7 @@ class TeamService:
         self, user_team_data: UserTeamCreateSchema, team_id: int
     ) -> UserTeamCreateSuccessSchema:
         """
-        Assigns a user to a team with a specific role.
+        Assign a user to a team with a specific role.
 
         Args:
             user_team_data (UserTeamCreateSchema): User ID and role to assign.
@@ -149,7 +152,7 @@ class TeamService:
 
     async def remove_user_from_team(self, user_id: int, team_id: int) -> None:
         """
-        Removes a user from a team.
+        Remove a user from a team.
 
         Args:
             user_id (int): ID of the user to remove.
@@ -165,20 +168,18 @@ class TeamService:
                 detail='The user is not a member of this team',
             )
 
-    async def get_avg_score(self, user_id: int, team_id: int, start_date: date, end_date: date) -> float:
+    async def get_avg_evaluation(self, user_id: int, team_id: int) -> float:
         """
-        Calculates the average score of a user in a team over a given date range.
+        Calculate the average evaluation of a user in a team.
 
         Args:
             user_id (int): ID of the user.
             team_id (int): ID of the team.
-            start_date (date): Start date of the period.
-            end_date (date): End date of the period.
 
         Returns:
-            float: Average score, rounded to 2 decimal places.
+            float: Average evaluation, rounded to 2 decimal places.
         """
-        return await self.manager.get_avg_score(user_id, team_id, start_date, end_date)
+        return await self.manager.get_avg_evaluation(user_id, team_id)
 
 
 def get_team_service(manager: Annotated[TeamManager, Depends(get_team_manager)]) -> TeamService:

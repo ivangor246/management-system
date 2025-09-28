@@ -96,7 +96,7 @@ class TestTeamsAPI:
         manager_user, manager_token = await self._create_user_and_token(session, user_data)
         team_manager = TeamManager(session)
         team = await team_manager.create_team(TeamCreateSchema(name='Team 1'), manager_user)
-        await team_manager.assign_role(manager_user.id, team.id, UserRoles.MANAGER)
+        await team_manager.assign_role(manager_user.id, team.id, UserRoles.ADMIN)
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as ac:
             response = await ac.delete(
@@ -106,7 +106,7 @@ class TestTeamsAPI:
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    async def test_get_avg_score(self, app: FastAPI, session: AsyncSession, user_data):
+    async def test_get_avg_evaluation(self, app: FastAPI, session: AsyncSession, user_data):
         user, token = await self._create_user_and_token(session, user_data)
         team_manager = TeamManager(session)
         team = await team_manager.create_team(TeamCreateSchema(name='Team 1'), user)
@@ -117,7 +117,7 @@ class TestTeamsAPI:
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as ac:
             response = await ac.get(
-                f'/api/teams/{team.id}/avg-score?start_date={start_date}&end_date={end_date}',
+                f'/api/teams/{team.id}/avg-evaluation?start_date={start_date}&end_date={end_date}',
                 headers={'Authorization': f'Bearer {token}'},
             )
 

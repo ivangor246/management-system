@@ -27,7 +27,6 @@ class UserAdmin(ModelView, model=User):
         User.first_name,
         User.last_name,
         User.is_admin,
-        User.is_available,
     ]
 
 

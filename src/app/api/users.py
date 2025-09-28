@@ -19,11 +19,11 @@ async def get_user_data(
     Retrieve the current authenticated user's data.
 
     Args:
-        service (UserService): Dependency injection of UserService.
+        service (UserService): User service dependency.
         auth_user (User): Current authenticated user.
 
     Returns:
-        UserSchema: User details including username, email, and profile info.
+        UserSchema: User details including username, email, and profile information.
     """
     return await service.get_user_data(auth_user)
 
@@ -38,15 +38,14 @@ async def update_user(
     Update the current authenticated user's profile.
 
     Args:
-        service (UserService): Dependency injection of UserService.
+        service (UserService): User service dependency.
         auth_user (User): Current authenticated user.
-        user_data (UserUpdateSchema): Updated user information.
+        user_data (UserUpdateSchema): New user information.
 
     Returns:
-        UserUpdateSuccessSchema: Success confirmation of the update.
+        UserUpdateSuccessSchema: Confirmation of a successful update.
     """
-    response = await service.update_user(auth_user, user_data)
-    return response
+    return await service.update_user(auth_user, user_data)
 
 
 @users_router.delete('/me', status_code=status.HTTP_204_NO_CONTENT)
@@ -58,7 +57,7 @@ async def delete_user(
     Delete the current authenticated user's account.
 
     Args:
-        service (UserService): Dependency injection of UserService.
+        service (UserService): User service dependency.
         auth_user (User): Current authenticated user.
 
     Returns:

@@ -7,6 +7,7 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - test_postgres
+      - test_redis
     env_file:
       - .env
     environment:
@@ -15,6 +16,7 @@ services:
       - DB_NAME=${TEST_DB_NAME}
       - DB_USER=${TEST_DB_USER}
       - DB_PASS=${TEST_DB_PASS}
+      - REDIS_HOST=${TEST_REDIS_HOST}
     volumes:
       - ./tests:/project/tests
     entrypoint: ""
@@ -29,5 +31,5 @@ services:
       - POSTGRES_USER=${TEST_DB_USER}
       - POSTGRES_PASSWORD=${TEST_DB_PASS}
 
-volumes:
-  pg_data:
+  test_redis:
+    image: redis:7.0.5-alpine

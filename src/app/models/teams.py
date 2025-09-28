@@ -2,7 +2,7 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base, str_100
@@ -42,3 +42,5 @@ class UserTeam(Base):
 
     user: Mapped['User'] = relationship(back_populates='teams')
     team: Mapped['Team'] = relationship(back_populates='members', passive_deletes=True)
+
+    __table_args__ = (UniqueConstraint('user_id', 'team_id', name='unique_user_team'),)

@@ -76,7 +76,10 @@ class TestMeetingsAPI:
         meeting_manager = MeetingManager(session)
         await meeting_manager.create_meeting(
             MeetingCreateSchema(
-                name='Team Kickoff', date=date.today(), time=time(hour=9, minute=0), member_ids=[manager_user.id]
+                name='Team Kickoff',
+                date=date.today() + timedelta(days=2),
+                time=time(hour=9, minute=0),
+                member_ids=[manager_user.id],
             ),
             team.id,
         )
@@ -98,7 +101,10 @@ class TestMeetingsAPI:
         meeting_manager = MeetingManager(session)
         await meeting_manager.create_meeting(
             MeetingCreateSchema(
-                name='One-on-One', date=date.today(), time=time(hour=11, minute=0), member_ids=[manager_user.id]
+                name='One-on-One',
+                date=date.today() + timedelta(days=2),
+                time=time(hour=11, minute=0),
+                member_ids=[manager_user.id],
             ),
             team.id,
         )
@@ -120,7 +126,10 @@ class TestMeetingsAPI:
         meeting_manager = MeetingManager(session)
         meeting = await meeting_manager.create_meeting(
             MeetingCreateSchema(
-                name='Daily Standup', date=date.today(), time=time(hour=9, minute=0), member_ids=[manager_user.id]
+                name='Daily Standup',
+                date=date.today() + timedelta(days=2),
+                time=time(hour=9, minute=0),
+                member_ids=[manager_user.id],
             ),
             team.id,
         )
@@ -143,7 +152,10 @@ class TestMeetingsAPI:
         meeting_manager = MeetingManager(session)
         meeting = await meeting_manager.create_meeting(
             MeetingCreateSchema(
-                name='Retro', date=date.today(), time=time(hour=15, minute=0), member_ids=[manager_user.id]
+                name='Retro',
+                date=date.today() + timedelta(days=2),
+                time=time(hour=15, minute=0),
+                member_ids=[manager_user.id],
             ),
             team.id,
         )

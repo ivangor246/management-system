@@ -34,10 +34,7 @@ async def user(session: AsyncSession) -> User:
 
 @pytest.fixture
 def team_data():
-    return TeamCreateSchema(
-        name='team_name1',
-        description='description1',
-    )
+    return TeamCreateSchema(name='team_name1')
 
 
 @pytest_asyncio.fixture
@@ -51,9 +48,9 @@ async def task(session: AsyncSession, user: User, team: Team) -> Task:
     today = date.today()
     task_data = TaskCreateSchema(
         description='task_description1',
-        deadline=today + timedelta(days=1),
-        performer_id=None,
-        team_id=user.id,
+        deadline=today + timedelta(days=5),
+        performer_id=user.id,
+        team_id=team.id,
     )
     manager = TaskManager(session)
     return await manager.create_task(task_data, team.id)
@@ -61,11 +58,11 @@ async def task(session: AsyncSession, user: User, team: Team) -> Task:
 
 @pytest.mark.asyncio
 class TestCommentService:
-    async def test_create_comment(self, session: AsyncSession, user: User, task: Task):
+    async def test_create_comment(self, session: AsyncSession, user: User, task: Task, team: Team):
         service = CommentService(CommentManager(session))
         comment_data = CommentCreateSchema(text='comment1')
 
-        result = await service.create_comment(comment_data, user.id, task.id)
+        result = await service.create_comment(comment_data, user.id, task.id, team.id)
         assert result.comment_id is not None
         assert result.detail == 'Comment has been successfully created'
 
@@ -73,23 +70,23 @@ class TestCommentService:
         comment = stmt.fetchone()
         assert comment is not None
 
-    async def test_get_comments_by_task(self, session: AsyncSession, user: User, task: Task):
+    async def test_get_comments_by_task(self, session: AsyncSession, user: User, task: Task, team: Team):
         service = CommentService(CommentManager(session))
         comment_data = CommentCreateSchema(text='comment2')
 
-        await service.create_comment(comment_data, user.id, task.id)
-        comments = await service.get_comments_by_task(task.id)
+        await service.create_comment(comment_data, user.id, task.id, team.id)
+        comments = await service.get_comments_by_task(task.id, team.id)
         assert len(comments) == 1
         assert comments[0].text == comment_data.text
         assert comments[0].user_id == user.id
         assert comments[0].task_id == task.id
 
-    async def test_delete_comment(self, session: AsyncSession, user: User, task: Task):
+    async def test_delete_comment(self, session: AsyncSession, user: User, task: Task, team: Team):
         service = CommentService(CommentManager(session))
         comment_data = CommentCreateSchema(text='comment_to_delete')
 
-        created = await service.create_comment(comment_data, user.id, task.id)
-        await service.delete_comment(created.comment_id)
+        created = await service.create_comment(comment_data, user.id, task.id, team.id)
+        await service.delete_comment(created.comment_id, task.id, team.id)
 
         stmt = await session.execute(Comment.__table__.select().where(Comment.id == created.comment_id))
         comment = stmt.fetchone()

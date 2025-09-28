@@ -42,7 +42,7 @@ class Config(BaseSettings):
     TITLE: str = 'Business Management System'
     DOCS_URL: str = '/api/docs'
     OPENAPI_URL: str = '/api/docs.json'
-    DEBUG: bool = Field(alias='DEBUG') == 'True'
+    DEBUG: bool = Field(default=False, alias='DEBUG')
 
     SECRET_KEY: str = Field(alias='SECRET_KEY')
     TOKEN_ALGORITHM: str = 'HS256'
@@ -57,6 +57,12 @@ class Config(BaseSettings):
     ADMIN_NAME: str = Field(alias='ADMIN_NAME')
     ADMIN_PASS: str = Field(alias='ADMIN_PASS')
 
+    REDIS_HOST: str = Field(alias='REDIS_HOST')
+
+    @property
+    def REDIS_URL(self) -> str:
+        return f'redis://{self.REDIS_HOST}:6379/0'
+
     @property
     def DB_URL(self) -> str:
         """
@@ -66,6 +72,16 @@ class Config(BaseSettings):
             str: PostgreSQL async connection URL.
         """
         return f'postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}'
+
+    @property
+    def SYNC_DB_URL(self) -> str:
+        """
+        Constructs the database connection URL for alembic.
+
+        Returns:
+            str: PostgreSQL connection URL.
+        """
+        return f'postgresql+psycopg2://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}'
 
 
 @lru_cache

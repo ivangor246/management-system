@@ -1,6 +1,6 @@
 from pydantic import EmailStr
 
-from .base import BaseSchema
+from .base import BaseResponseSchema, BaseSchema
 
 
 class CredentialsSchema(BaseSchema):
@@ -11,3 +11,7 @@ class CredentialsSchema(BaseSchema):
 class TokenSchema(BaseSchema):
     access_token: str
     token_type: str = 'bearer'
+
+
+class LogoutSuccessSchema(BaseResponseSchema):
+    detail: str = 'Successfully logged out'

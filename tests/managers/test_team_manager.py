@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.managers.teams import TeamManager
 from app.managers.users import UserManager
+from app.models.evaluations import Evaluation
 from app.models.tasks import Task, TaskStatuses
 from app.models.teams import Team, UserRoles, UserTeam
 from app.models.users import User
@@ -132,25 +133,30 @@ class TestTeamManager:
         deleted_team = result.scalar_one_or_none()
         assert deleted_team is None
 
-    async def test_get_avg_score(self, session: AsyncSession, team_data: TeamCreateSchema, users: list[User]):
+    async def test_get_avg_evaluation(self, session: AsyncSession, team_data: TeamCreateSchema, users: list[User]):
         manager = TeamManager(session)
         new_team = await manager.create_team(team_data, users[0])
 
-        scores = []
+        evaluations = []
         for i in range(1, 5):
-            score = i % 5 + 1
-            scores.append(score)
+            evaluation = i % 5 + 1
+            evaluations.append(evaluation)
             new_task = Task(
                 description=f'description{i}',
                 deadline=date.today() - timedelta(days=i % 3),
                 status=TaskStatuses.COMPLETED,
                 performer_id=users[0].id,
                 team_id=new_team.id,
-                score=score,
             )
             session.add(new_task)
+            await session.flush()
 
-        start_date = date.today() - timedelta(days=5)
-        end_date = date.today()
-        avg_score = await manager.get_avg_score(users[0].id, new_team.id, start_date, end_date)
-        assert avg_score == round(sum(scores) / len(scores), 2)
+            new_evaluation = Evaluation(
+                value=evaluation,
+                evaluator_id=users[1].id,
+                task_id=new_task.id,
+            )
+            session.add(new_evaluation)
+
+        avg_evaluation = await manager.get_avg_evaluation(users[0].id, new_team.id)
+        assert avg_evaluation == round(sum(evaluations) / len(evaluations), 2)

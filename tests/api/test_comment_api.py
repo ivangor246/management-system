@@ -14,8 +14,8 @@ from app.managers.teams import TeamManager
 from app.managers.users import UserManager
 from app.models.users import User
 from app.schemas.comments import CommentCreateSchema
-from app.schemas.tasks import TaskCreateSchema
-from app.schemas.teams import TeamCreateSchema, UserRoles
+from app.schemas.tasks import TaskCreateSchema, TaskStatuses
+from app.schemas.teams import TeamCreateSchema
 from app.schemas.users import UserCreateSchema
 
 
@@ -45,21 +45,28 @@ class TestCommentsAPI:
         token = TokenMixin().generate_access_token(user.email)
         return user, token
 
-    async def _create_team_with_manager(self, session: AsyncSession, manager_user: User):
+    async def _create_team(self, session: AsyncSession, user: User):
         team_manager = TeamManager(session)
-        team = await team_manager.create_team(TeamCreateSchema(name='Test Team'), manager_user)
-        await team_manager.assign_role(manager_user.id, team.id, UserRoles.MANAGER)
+        team = await team_manager.create_team(TeamCreateSchema(name='Test Team'), user)
         return team
 
-    async def _create_task(self, session: AsyncSession, team_id: int, description='Task for comments'):
+    async def _create_task(self, session: AsyncSession, team_id: int, user: User, description='Task for comments'):
         task_manager = TaskManager(session)
-        task = await task_manager.create_task(TaskCreateSchema(description=description, deadline=date.today()), team_id)
+        task = await task_manager.create_task(
+            TaskCreateSchema(
+                description=description,
+                deadline=date.today(),
+                status=TaskStatuses.OPEN,
+                performer_id=user.id,
+            ),
+            team_id,
+        )
         return task
 
     async def test_create_comment(self, app: FastAPI, session: AsyncSession, user_data):
         user, token = await self._create_user_and_token(session, user_data)
-        team = await self._create_team_with_manager(session, user)
-        task = await self._create_task(session, team.id)
+        team = await self._create_team(session, user)
+        task = await self._create_task(session, team.id, user)
 
         comment_data = CommentCreateSchema(text='Test comment')
 
@@ -75,10 +82,10 @@ class TestCommentsAPI:
 
     async def test_get_comments_by_task(self, app: FastAPI, session: AsyncSession, user_data):
         user, token = await self._create_user_and_token(session, user_data)
-        team = await self._create_team_with_manager(session, user)
-        task = await self._create_task(session, team.id)
+        team = await self._create_team(session, user)
+        task = await self._create_task(session, team.id, user)
         comment_manager = CommentManager(session)
-        await comment_manager.create_comment(CommentCreateSchema(text='First comment'), user.id, task.id)
+        await comment_manager.create_comment(CommentCreateSchema(text='First comment'), user.id, task.id, team.id)
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as ac:
             response = await ac.get(
@@ -94,10 +101,10 @@ class TestCommentsAPI:
 
     async def test_delete_comment(self, app: FastAPI, session: AsyncSession, user_data):
         user, token = await self._create_user_and_token(session, user_data)
-        team = await self._create_team_with_manager(session, user)
-        task = await self._create_task(session, team.id)
+        team = await self._create_team(session, user)
+        task = await self._create_task(session, team.id, user)
         comment_manager = CommentManager(session)
-        comment = await comment_manager.create_comment(CommentCreateSchema(text='Delete me'), user.id, task.id)
+        comment = await comment_manager.create_comment(CommentCreateSchema(text='Delete me'), user.id, task.id, team.id)
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as ac:
             response = await ac.delete(

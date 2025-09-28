@@ -40,11 +40,11 @@ async def team(session: AsyncSession, user: User) -> Team:
 
 
 @pytest_asyncio.fixture
-async def task(session: AsyncSession, team: Team) -> Task:
+async def task(session: AsyncSession, team: Team, user: User) -> Task:
     task_data = TaskCreateSchema(
         description='task_description1',
-        deadline=datetime.date.today(),
-        performer_id=None,
+        deadline=datetime.date.today() + datetime.timedelta(days=5),
+        performer_id=user.id,
         team_id=team.id,
     )
     manager = TaskManager(session)
@@ -55,7 +55,7 @@ async def task(session: AsyncSession, team: Team) -> Task:
 async def meeting(session: AsyncSession, user: User, team: Team) -> Meeting:
     meeting_data = MeetingCreateSchema(
         name='meeting_name1',
-        date=datetime.date.today(),
+        date=datetime.date.today() + datetime.timedelta(days=5),
         time=datetime.datetime.now().time(),
         member_ids=[user.id],
     )
@@ -68,7 +68,7 @@ class TestCalendarService:
     async def test_get_calendar_by_date(self, session: AsyncSession, team: Team, task: Task, meeting: Meeting):
         service = CalendarService(TaskManager(session), MeetingManager(session))
 
-        result = await service.get_calendar_by_date(team.id, date=datetime.date.today())
+        result = await service.get_calendar_by_date(team.id, date=datetime.date.today() + datetime.timedelta(days=5))
 
         task_events = [e for e in result.events if e.__class__.__name__ == 'TaskSchema']
         meeting_events = [e for e in result.events if e.__class__.__name__ == 'MeetingSchema']
@@ -82,7 +82,7 @@ class TestCalendarService:
     async def test_get_calendar_by_month(self, session: AsyncSession, team: Team, task: Task, meeting: Meeting):
         service = CalendarService(TaskManager(session), MeetingManager(session))
 
-        today = datetime.date.today()
+        today = datetime.date.today() + datetime.timedelta(days=5)
         result = await service.get_calendar_by_month(team.id, year=today.year, month=today.month)
 
         task_events = [e for e in result.events if e.__class__.__name__ == 'TaskSchema']

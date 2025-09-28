@@ -13,6 +13,8 @@ services:
       - WATCH_MODE
     ports:
       - ${ROOT_PORT}:8000
+    volumes:
+      - ./src/app/migrations:/project/src/app/migrations
     develop:
       watch:
         - action: sync
@@ -30,5 +32,11 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
 
+  redis:
+    image: redis:7.0.5-alpine
+    volumes:
+      - redis_data:/data
+
 volumes:
   pg_data:
+  redis_data:

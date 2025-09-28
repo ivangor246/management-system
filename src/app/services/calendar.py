@@ -12,40 +12,30 @@ from app.schemas.tasks import TaskSchema
 
 class CalendarService:
     """
-    Service to retrieve calendar events (tasks and meetings) for a team.
-
-    Attributes:
-        task_manager (TaskManager): Manager responsible for task operations.
-        meeting_manager (MeetingManager): Manager responsible for meeting operations.
-
-    Methods:
-        get_calendar_by_date(team_id: int, date: datetime.date) -> CalendarDateSchema:
-            Returns all tasks and meetings for a team on a specific date.
-        get_calendar_by_month(team_id: int, year: int, month: int) -> CalendarMonthSchema:
-            Returns all tasks and meetings for a team in a specific month.
+    Service for retrieving calendar events (tasks and meetings) for a team.
     """
 
     def __init__(self, task_manager: TaskManager, meeting_manager: MeetingManager):
         """
-        Initializes the CalendarService with task and meeting managers.
+        Initialize CalendarService with task and meeting managers.
 
         Args:
-            task_manager (TaskManager): Task manager instance.
-            meeting_manager (MeetingManager): Meeting manager instance.
+            task_manager (TaskManager): Manager responsible for task operations.
+            meeting_manager (MeetingManager): Manager responsible for meeting operations.
         """
         self.task_manager = task_manager
         self.meeting_manager = meeting_manager
 
     async def get_calendar_by_date(self, team_id: int, date: datetime.date) -> CalendarDateSchema:
         """
-        Retrieves all tasks and meetings for a team on a specific date.
+        Retrieve all tasks and meetings for a team on a specific date.
 
         Args:
             team_id (int): ID of the team.
-            date (datetime.date): The target date to fetch events for.
+            date (datetime.date): Target date to fetch events for.
 
         Returns:
-            CalendarDateSchema: Schema containing the date and list of events for that date.
+            CalendarDateSchema: Schema containing the date and the list of events.
         """
         tasks = await self.task_manager.get_tasks_by_team(team_id)
         meetings = await self.meeting_manager.get_meetings_by_team(team_id)
@@ -62,15 +52,15 @@ class CalendarService:
 
     async def get_calendar_by_month(self, team_id: int, year: int, month: int) -> CalendarMonthSchema:
         """
-        Retrieves all tasks and meetings for a team within a specific month.
+        Retrieve all tasks and meetings for a team within a specific month.
 
         Args:
             team_id (int): ID of the team.
-            year (int): Year of the target month.
-            month (int): Month number (1-12).
+            year (int): Target year.
+            month (int): Target month (1–12).
 
         Returns:
-            CalendarMonthSchema: Schema containing year, month, and list of events within that month.
+            CalendarMonthSchema: Schema containing year, month, and the list of events.
         """
         tasks = await self.task_manager.get_tasks_by_team(team_id)
         meetings = await self.meeting_manager.get_meetings_by_team(team_id)
@@ -91,7 +81,7 @@ def get_calendar_service(
     meeting_manager: Annotated[MeetingManager, Depends(get_meeting_manager)],
 ) -> CalendarService:
     """
-    Dependency injector for CalendarService.
+    Dependency provider for CalendarService.
 
     Args:
         task_manager (TaskManager): Injected TaskManager instance.
