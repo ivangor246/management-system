@@ -1,7 +1,97 @@
 :root {
-    --main-text-color: #222;
+    --light-color: #fffdfd;
+    --dark-color: #222;
+
+    --link-dark-color: #900;
+    --link-dark-hover-color: #f00;
+
+    --link-light-color: #f00;
+    --link-light-hover-color: var(--light-color);
+
+    --font-size: 16px;
+}
+
+html, body {
+    height: 100%;
+}
+html {
+    font-size: var(--font-size);
+    font-family: sans-serif;
+}
+body {
+    background: var(--light-color);
 }
 
 * {
-    color: var(--main-text-color);
+    color: var(--dark-color);
+}
+h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+h2 {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+a {
+    color: var(--link-dark-color);
+    transition: 0.1s;
+}
+a:hover, a:active {
+    color: var(--link-dark-hover-color);
+}
+
+.wrapper {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+.container {
+    max-width: 1000px;
+    padding: 0 16px;
+    margin: 0 auto;
+}
+
+
+header {
+    background-color: var(--dark-color);
+    padding: 1rem 0;
+}
+header * {
+    color: var(--light-color);
+}
+header a {
+    color: var(--link-light-color);
+}
+header a:hover,
+header a:active {
+    color: var(--link-light-hover-color);
+}
+.header__links {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+
+main {
+    padding: 40px;
+    flex: 1
+}
+
+
+footer {
+    background-color: var(--dark-color);
+    padding: 1rem 0;
+}
+footer * {
+    color: var(--light-color);
+}
+footer a {
+    color: var(--link-light-color);
+}
+footer a:hover,
+footer a:active {
+    color: var(--link-light-hover-color);
 }

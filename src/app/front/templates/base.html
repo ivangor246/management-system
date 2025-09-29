@@ -8,16 +8,30 @@
     <link rel="stylesheet" href="/static/main.css">
 </head>
 <body>
-    <header>
-        Header
-    </header>
+    <div class="wrapper">
+        <header>
+            <div class="container">
+                <div class="header__links">
+                    <a href="/register">Регистрация</a>
+                    <a href="/login">Войти</a>
+                    <a href="/logout">Выйти</a>
+                </div>
+            </div>
+        </header>
 
-    <main>
-        {% block content %}{% endblock content %}
-    </main>
+        <main>
+            <div class="container">
+                {% block content %}{% endblock content %}
+            </div>
+        </main>
 
-    <footer>
-        Footer
-    </footer>
+        <footer>
+            <div class="container">
+                &copy;
+                <script>document.write(new Date().getFullYear());</script>
+                Система управления командой
+            </div>
+        </footer>
+    </div>
 </body>
 </html>
