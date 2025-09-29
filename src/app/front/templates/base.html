@@ -14,9 +14,12 @@
             <div class="container">
                 <div class="header__links">
                     <a href="/">Главная</a>
-                    <a href="/register">Регистрация</a>
-                    <a href="/login">Войти</a>
-                    <a href="/logout">Выйти</a>
+                    {% if not is_auth %}
+                        <a href="/register">Регистрация</a>
+                        <a href="/login">Войти</a>
+                    {% else %}
+                        <a id="logout-btn">Выйти</a>
+                    {% endif %}
                 </div>
             </div>
         </header>
@@ -35,5 +38,38 @@
             </div>
         </footer>
     </div>
+
+    <script>
+        document.getElementById("logout-btn").addEventListener("click", async (event) => {
+            event.preventDefault();
+
+            const token = document.cookie
+                .split("; ")
+                .find(row => row.startsWith("access_token="))
+                ?.split("=")[1];
+
+            if (!token) {
+                alert("Вы не авторизованы");
+                return;
+            }
+
+            try {
+                const response = await fetch("/api/auth/logout", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ token }),
+                });
+
+                if (response.ok) {
+                    document.cookie = `access_token=;path=/;SameSite=Lax;max-age=0`;
+                    window.location.href = "/login";
+                } else {
+                    alert("Ошибка при выходе");
+                }
+            } catch {
+                alert("Ошибка сети");
+            }
+        });
+    </script>
 </body>
 </html>

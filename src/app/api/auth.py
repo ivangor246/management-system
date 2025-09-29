@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, status
 
-from app.schemas.auth import CredentialsSchema, LogoutSuccessSchema, TokenSchema
+from app.schemas.auth import CredentialsSchema, LogoutSchema, LogoutSuccessSchema, TokenSchema
 from app.services.auth import AuthService, Depends, get_auth_service
 
 auth_router = APIRouter(prefix='/auth', tags=['auth'])
@@ -31,7 +31,7 @@ async def authenticate(
 
 @auth_router.post('/logout', status_code=status.HTTP_200_OK)
 async def logout(
-    token: str,
+    data: LogoutSchema,
     service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> LogoutSuccessSchema:
     """
@@ -47,4 +47,5 @@ async def logout(
     Raises:
         HTTPException: If the token is invalid or expired.
     """
+    token = data.token
     return await service.logout(token)

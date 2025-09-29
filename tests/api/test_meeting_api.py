@@ -19,7 +19,7 @@ from app.schemas.users import UserCreateSchema
 
 @pytest.fixture
 def app(session: AsyncSession) -> FastAPI:
-    new_app = create_app()
+    new_app = create_app(skip_static=True)
     new_app.dependency_overrides[get_session] = lambda: session
     return new_app
 

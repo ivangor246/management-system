@@ -13,5 +13,9 @@ class TokenSchema(BaseSchema):
     token_type: str = 'bearer'
 
 
+class LogoutSchema(BaseSchema):
+    token: str
+
+
 class LogoutSuccessSchema(BaseResponseSchema):
     detail: str = 'Successfully logged out'
