@@ -15,3 +15,8 @@ async def home_page(request: Request):
 @front_router.get('/register', response_class=HTMLResponse)
 async def register_page(request: Request):
     return templates.TemplateResponse('register.html', {'request': request})
+
+
+@front_router.get('/login', response_class=HTMLResponse)
+async def login_page(request: Request):
+    return templates.TemplateResponse('login.html', {'request': request})

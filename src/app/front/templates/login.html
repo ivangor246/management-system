@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Вход{% endblock title %}
+
+{% block content %}
+    <h1>Вход</h1>
+
+    <form id="login-form" class="page-form">
+
+        <div class="input-block">
+            <label for="email-input">Почта:</label>
+            <input type="text" name="email" required id="email-input">
+        </div>
+
+        <div class="input-block">
+            <label for="password-input">Пароль:</label>
+            <input type="text" name="password" required id="password-input">
+        </div>
+
+        <button class="form-btn">Отправить</button>
+    </form>
+
+    <p id="message"></p>
+
+    <script>
+        document.getElementById("login-form").addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const form_data = new FormData(event.target);
+            const data = Object.fromEntries(form_data);
+
+            try {
+                const response = await fetch("/api/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data),
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    document.cookie = `access_token=${result.access_token};path=/;SameSite=Lax;max-age=${24*60*60}`;
+                    window.location.href = "/";
+                } else {
+                    document.getElementById("message").textContent = "Ошибка при входе";
+                }
+            } catch {
+                document.getElementById("message").textContent = "Ошибка сети";
+            }
+        });
+    </script>
+{% endblock content %}
