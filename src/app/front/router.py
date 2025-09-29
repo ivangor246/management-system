@@ -8,5 +8,10 @@ front_router = APIRouter()
 
 
 @front_router.get('/', response_class=HTMLResponse)
-async def home(request: Request):
+async def home_page(request: Request):
     return templates.TemplateResponse('home.html', {'request': request})
+
+
+@front_router.get('/register', response_class=HTMLResponse)
+async def register_page(request: Request):
+    return templates.TemplateResponse('register.html', {'request': request})

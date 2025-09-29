@@ -6,12 +6,14 @@
     <title>{% block title %}Управление командой{% endblock title %}</title>
     <link rel="stylesheet" href="/static/reset.css">
     <link rel="stylesheet" href="/static/main.css">
+    {% block links %}{% endblock links %}
 </head>
 <body>
     <div class="wrapper">
         <header>
             <div class="container">
                 <div class="header__links">
+                    <a href="/">Главная</a>
                     <a href="/register">Регистрация</a>
                     <a href="/login">Войти</a>
                     <a href="/logout">Выйти</a>
