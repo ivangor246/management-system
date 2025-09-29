@@ -11,11 +11,13 @@ Functions:
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.admin.setup import init_admin
 from app.api.root import get_root_router
 from app.core.config import config
 from app.core.lifespan import lifespan
+from app.front.router import front_router
 
 
 def create_app() -> FastAPI:
@@ -29,6 +31,8 @@ def create_app() -> FastAPI:
         - Debug mode as defined in the configuration.
         - Admin interface initialization.
         - Root router inclusion.
+        - Frontend routed inclusion.
+        - Mount static files.
 
     Returns:
         FastAPI: Configured FastAPI application instance.
@@ -46,5 +50,9 @@ def create_app() -> FastAPI:
 
     root_router = get_root_router()
     app.include_router(root_router)
+
+    app.include_router(front_router)
+
+    app.mount('/static', StaticFiles(directory='app/static'), name='static')
 
     return app
