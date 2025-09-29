@@ -14,7 +14,7 @@
             <div class="container">
                 <div class="header__links">
                     <a href="/">Главная</a>
-                    {% if not is_auth %}
+                    {% if not context.is_auth %}
                         <a href="/register">Регистрация</a>
                         <a href="/login">Войти</a>
                     {% else %}
