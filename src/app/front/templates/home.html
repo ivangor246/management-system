@@ -2,6 +2,30 @@
 
 {% block title %}Главная{% endblock title %}
 
+{% block links %}
+    <link rel="stylesheet" href="/static/home.css">
+{% endblock links %}
+
+
 {% block content %}
     <h1>Главная</h1>
+
+    {% if context.user %}
+        <p class="user-info"><b>Пользователь: </b>{{ context.user.username }}</p>
+    {% else %}
+        <p class="user-info">Вы не авторизованы</p>
+        <script>
+            (() => {
+                const token = document.cookie
+                    .split("; ")
+                    .find(row => row.startsWith("access_token="))
+                    ?.split("=")[1];
+
+                if (token) {
+                    document.cookie = `access_token=;path=/;SameSite=Lax;max-age=0`;
+                }
+            })();
+        </script>
+    {% endif %}
+
 {% endblock content %}

@@ -2,14 +2,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-
-async def get_context(request: Request) -> bool:
-    token = request.cookies.get('access_token')
-    request.state.context = {
-        'is_auth': bool(token),
-    }
-    return request.state.context
-
+from .utils import get_context
 
 templates = Jinja2Templates(directory='app/front/templates')
 
