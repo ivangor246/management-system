@@ -5,7 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_session
 from app.core.redis import redis
 from app.core.security import TokenMixin
+from app.managers.teams import get_team_manager
 from app.models.users import User
+from app.schemas.teams import TeamByMemberSchema
+from app.services.teams import get_team_service
 
 
 async def get_context(request: Request, session: AsyncSession = Depends(get_session)) -> dict:
@@ -23,6 +26,12 @@ async def get_context(request: Request, session: AsyncSession = Depends(get_sess
 
     request.state.context = context
     return context
+
+
+async def get_teams(user: User, session: AsyncSession) -> list[TeamByMemberSchema]:
+    manager = get_team_manager(session)
+    service = get_team_service(manager)
+    return service.get_teams_by_user(user_id=user.id)
 
 
 async def resolve_user_from_token(token: str, session: AsyncSession) -> User | None:

@@ -11,9 +11,25 @@
     <h1>Главная</h1>
 
     {% if context.user %}
-        <p class="user-info"><b>Пользователь: </b>{{ context.user.username }}</p>
+        <h2 class="user-info"><b>Пользователь: </b>{{ context.user.username }}</h2>
+
+        <div class="teams">
+            {% if context.teams %}
+                <h2>Команды</h2>
+                    {% for team in context.teams %}
+                        <div class="team-block">
+                            <a href="/teams/{{ team.team_id }}" class="team-name">{{ team.name }}</a>
+                            <p>Ваша роль: {{ team.role }}</p>
+                        </div>
+                        <div class="hor-line"></div>
+                    {% endfor %}
+            {% else %}
+                <h2>Команды не найдены</h2>
+            {% endif %}
+        </div>
+
     {% else %}
-        <p class="user-info">Вы не авторизованы</p>
+        <h2 class="user-info">Вы не авторизованы</h2>
         <script>
             (() => {
                 const token = document.cookie

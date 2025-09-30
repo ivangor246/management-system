@@ -132,3 +132,10 @@ label {
 .page-form {
     margin: 2rem 0;
 }
+
+
+.hor-line {
+    width: 100%;
+    height: 1px;
+    background: var(--dark-color);
+}
