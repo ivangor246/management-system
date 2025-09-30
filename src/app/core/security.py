@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from typing import Annotated
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from passlib.context import CryptContext
 from passlib.exc import UnknownHashError
@@ -45,8 +45,9 @@ pwd_context = CryptContext(
 
 
 async def get_request_user(
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(http_bearer)],
+    request: Request,
     session: Annotated[AsyncSession, Depends(get_session)],
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(http_bearer)] = None,
 ) -> User:
     """
     Dependency to get the currently authenticated user from a JWT token.
@@ -61,7 +62,16 @@ async def get_request_user(
     Returns:
         User: The authenticated user.
     """
-    token = credentials.credentials
+    if credentials:
+        token = credentials.credentials
+    else:
+        token = request.cookies.get('access_token')
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Not authenticated',
+        )
 
     if await redis.exists(f'bl:{token}'):
         raise HTTPException(
