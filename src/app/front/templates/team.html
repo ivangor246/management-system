@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Главная{% endblock title %}
+
+{% block links %}
+    <link rel="stylesheet" href="/static/team.css">
+{% endblock links %}
+
+
+{% block content %}
+    <h1>Команда</h1>
+
+    {% if context.user %}
+        <h2 class="user-info"><b>Пользователь: </b>{{ context.user.username }}</h2>
+
+        <div class="tasks">
+            {% if context.tasks %}
+                <h2>Задачи</h2>
+                    {% for task in context.tasks %}
+                        <div class="task-block">
+                            <p><b>Описание: </b>{{ task.description }}</p>
+                            <p><b>Дедлайн: </b>{{ task.deadline }}</p>
+                            <p><b>Статус: </b>{{ task.status }}</p>
+                            <p><b>ID исполнителя: </b>{{ task.performer_id }}</p>
+                        </div>
+                        <div class="hor-line"></div>
+                    {% endfor %}
+            {% else %}
+                <h2>Задачи не найдены</h2>
+            {% endif %}
+        </div>
+
+    {% else %}
+        <script>
+            (() => {
+                document.location.href = "/";
+            })();
+        </script>
+    {% endif %}
+
+{% endblock content %}

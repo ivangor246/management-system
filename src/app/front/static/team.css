@@ -3,17 +3,17 @@
 }
 
 
-.teams {
+.tasks {
     display: flex;
     flex-direction: column;
     gap: 1rem;
     margin-top: 2rem;
 }
-.team-block {
+.tasks-block {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
 }
-.team-name {
+.tasks-name {
     font-size: 1.2rem;
 }
