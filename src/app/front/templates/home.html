@@ -64,38 +64,7 @@
                     if (response.ok) {
                         window.location.reload();
                     } else {
-                        alert("Ошибка при регистрации");
-                    }
-                } catch {
-                    alert("Ошибка сети");
-                }
-            });
-
-            document.getElementById("create-team-form").addEventListener("submit", async (event) => {
-                event.preventDefault();
-
-                const token = document.cookie
-                    .split("; ")
-                    .find(row => row.startsWith("access_token="))
-                    ?.split("=")[1];
-
-                const form_data = new FormData(event.target);
-                const data = Object.fromEntries(form_data);
-
-                try {
-                    const response = await fetch("/api/teams", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": `Bearer ${token}`,
-                        },
-                        body: JSON.stringify(data),
-                    });
-
-                    if (response.ok) {
-                        window.location.reload();
-                    } else {
-                        alert("Ошибка при регистрации");
+                        alert("Ошибка при создании");
                     }
                 } catch {
                     alert("Ошибка сети");

@@ -12,6 +12,66 @@
 
     {% if context.user %}
         <h2 class="user-info"><b>Пользователь: </b>{{ context.user.username }}</h2>
+        <p>Ваш ID: {{ context.user.id }}</p>
+
+        <div class="users">
+            <h2>Все члены комады</h2>
+            {% for user in context.users %}
+                <p>Пользователь: {{ user.username }} (Роль: {{ user.role }}, ID: {{user.user_id}})</p>
+            {% endfor %}
+        </div>
+
+        <form id="add-user-form" class="page-form">
+            <h2>Добавить / изменить роль пользователя</h2>
+            <div class="input-block">
+                <label for="user-id-input">ID пользователя:</label>
+                <input type="text" name="user_id" required id="user-id-input">
+            </div>
+
+            <div class="input-block">
+                <label for="role-select">Роль:</label>
+                <select name="role" id="role-select">
+                    <option value="u">Пользователь</option>
+                    <option value="m">Менеджер</option>
+                    <option value="a">Админ</option>
+                </select>
+            </div>
+
+            <button class="form-btn">Отправить</button>
+
+            <script>
+                document.getElementById("add-user-form").addEventListener("submit", async (event) => {
+                    event.preventDefault();
+
+                    const token = document.cookie
+                        .split("; ")
+                        .find(row => row.startsWith("access_token="))
+                        ?.split("=")[1];
+
+                    const form_data = new FormData(event.target);
+                    const data = Object.fromEntries(form_data);
+
+                    try {
+                        const response = await fetch("/api/teams/{{ context.team_id }}/users", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": `Bearer ${token}`,
+                            },
+                            body: JSON.stringify(data),
+                        });
+
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            alert("Ошибка при добавление / изменении");
+                        }
+                    } catch {
+                        alert("Ошибка сети");
+                    }
+                });
+            </script>
+        </form>
 
         <div class="tasks">
             {% if context.tasks %}

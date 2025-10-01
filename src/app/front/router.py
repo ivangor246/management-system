@@ -47,12 +47,15 @@ async def team_page(
     request: Request,
     session: Annotated[AsyncSession, Depends(get_session)],
     task_service: Annotated[TaskService, Depends(get_task_service)],
+    team_service: Annotated[TeamService, Depends(get_team_service)],
 ):
     context = request.state.context
+    context['team_id'] = team_id
     user = context.get('user')
     if user:
         try:
             await require_member(team_id, user, session)
+
             tasks = await task_service.get_tasks_by_team(team_id)
             for task in tasks:
                 if task.status == TaskStatuses.OPEN:
@@ -62,6 +65,16 @@ async def team_page(
                 else:
                     task.status = 'Завершена'
             context['tasks'] = tasks
+
+            users = await team_service.get_users(team_id)
+            for user in users:
+                if user.role == UserRoles.ADMIN:
+                    user.role = 'Админ'
+                elif user.role == UserRoles.MANAGER:
+                    user.role = 'Менеджер'
+                else:
+                    user.role = 'Пользователь'
+            context['users'] = users
         except HTTPException:
             ...
 
