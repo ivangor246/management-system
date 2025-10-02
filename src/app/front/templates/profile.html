@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Профиль{% endblock title %}
+
+{% block links %}
+    <link rel="stylesheet" href="/static/team.css">
+{% endblock links %}
+
+
+{% block content %}
+    <h1>Профиль</h1>
+
+    {% if context.user %}
+        <p>Имя пользователя: {{ context.user.username }}</p>
+        <p>Почта: {{ context.user.email }}</p>
+        <p>Имя: {{ context.user.first_name }}</p>
+        <p>Фамилия: {{ context.user.last_name }}</p>
+
+        <form id="update-user-form" class="page-form">
+            <h2>Обновить информацию о пользователе</h2>
+
+            <div class="input-block">
+                <label for="username-input">Имя пользователя:</label>
+                <input type="text" name="username" id="username-input">
+            </div>
+
+            <div class="input-block">
+                <label for="email-input">Почта:</label>
+                <input type="text" name="email" id="email-input">
+            </div>
+
+            <div class="input-block">
+                <label for="password-input">Пароль:</label>
+                <input type="text" name="password" id="password-input">
+            </div>
+
+            <div class="input-block">
+                <label for="first-name-input">Имя:</label>
+                <input type="text" name="first_name" id="first-name-input">
+            </div>
+
+            <div class="input-block">
+                <label for="last-name-input">Фамилия:</label>
+                <input type="text" name="last_name" id="last-name-input">
+            </div>
+
+            <button class="form-btn">Отправить</button>
+        </form>
+
+        <form id="delete-user-form" class="page-form">
+            <h2>Удалить пользователя</h2>
+            <button class="form-btn">Удалить</button>
+        </form>
+
+        <script>
+            // update form
+            document.getElementById("update-user-form").addEventListener("submit", async (event) => {
+                event.preventDefault();
+
+                const token = document.cookie
+                    .split("; ")
+                    .find(row => row.startsWith("access_token="))
+                    ?.split("=")[1];
+
+                const form_data = new FormData(event.target);
+                const data = Object.fromEntries(form_data);
+
+                Object.keys(data).forEach((key) => {
+                    if (data[key] === "" || data[key] == null) {
+                        delete data[key];
+                    }
+                });
+
+                try {
+                    const response = await fetch("/api/users/me", {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`,
+                        },                            
+                        body: JSON.stringify(data),
+                    });
+
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert("Ошибка при обновлении данных");
+                    }
+                } catch {
+                    alert("Ошибка сети");
+                }
+            });
+
+            // delete form
+            document.getElementById("delete-user-form").addEventListener("submit", async (event) => {
+                event.preventDefault();
+
+                const token = document.cookie
+                    .split("; ")
+                    .find(row => row.startsWith("access_token="))
+                    ?.split("=")[1];
+
+                try {
+                    const response = await fetch("/api/users/me", {
+                        method: "DELETE",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`,
+                        },                            
+                    });
+
+                    if (response.ok) {
+                        document.cookie = `access_token=;path=/;SameSite=Lax;max-age=0`;
+                        window.location.href = "/";
+                    } else {
+                        alert("Ошибка при удалении пользователя");
+                    }
+                } catch {
+                    alert("Ошибка сети");
+                }
+            });
+        </script>
+
+    {% else %}
+        <script>
+            (() => {
+                document.location.href = "/";
+            })();
+        </script>
+    {% endif %}
+
+{% endblock content %}

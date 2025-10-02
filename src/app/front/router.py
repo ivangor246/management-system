@@ -91,3 +91,9 @@ async def register_page(request: Request):
 async def login_page(request: Request):
     context = request.state.context
     return templates.TemplateResponse('login.html', {'request': request, 'context': context})
+
+
+@front_router.get('/profile', response_class=HTMLResponse)
+async def profile_page(request: Request):
+    context = request.state.context
+    return templates.TemplateResponse('profile.html', {'request': request, 'context': context})
