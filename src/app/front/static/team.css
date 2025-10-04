@@ -10,7 +10,6 @@
     gap: 1rem;
 }
 
-
 .tasks {
     display: flex;
     flex-direction: column;
@@ -26,6 +25,15 @@
     font-size: 1.2rem;
 }
 
+.calendar-title {
+    margin-top: 2rem;
+}
+.event-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
 
 #exclude-user-form {
     flex-direction: row;

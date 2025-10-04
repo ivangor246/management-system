@@ -129,6 +129,42 @@
             {% endif %}
         </div>
 
+        {% if context.calendar_day %}
+            <h2 class="calendar-title">Календарь на сегодня</h2>
+            {% for event in context.calendar_day.events %}
+                <div class="event-block">
+                    {% if event.deadline %}
+                        <p>Описание задачи: <b>{{ event.description }}</b></p>
+                        <p>Дедлайн: <b>{{ event.deadline }}</b></p>
+                        <p>ID исполнителя: <b>{{ event.performer_id }}</b></p>
+                    {% else %}
+                        <p>Встреча: <b>{{ event.name }}</b></p>
+                        <p>Дата: <b>{{ event.date }}</b></p>
+                        <p>Время (часы): <b>{{ event.time.strftime("%H") }}</b></p>
+                    {% endif %}
+                </div>
+                <div class="hor-line"></div>
+            {% endfor %}
+        {% endif %}
+
+        {% if context.calendar_month %}
+            <h2 class="calendar-title">Календарь на этот месяц</h2>
+            {% for event in context.calendar_month.events %}
+                <div class="event-block">
+                    {% if event.deadline %}
+                        <p>Описание задачи: <b>{{ event.description }}</b></p>
+                        <p>Дедлайн: <b>{{ event.deadline }}</b></p>
+                        <p>ID исполнителя: <b>{{ event.performer_id }}</b></p>
+                    {% else %}
+                        <p>Встреча: <b>{{ event.name }}</b></p>
+                        <p>Дата: <b>{{ event.date }}</b></p>
+                        <p>Время (часы): <b>{{ event.time.strftime("%H") }}</b></p>
+                    {% endif %}
+                </div>
+                <div class="hor-line"></div>
+            {% endfor %}
+        {% endif %}
+
     {% else %}
         <script>
             (() => {

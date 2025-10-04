@@ -7,7 +7,7 @@ class UserSchema(BaseModelSchema):
     username: str
     email: EmailStr
     first_name: str
-    last_name: str
+    last_name: str | None
     is_admin: bool
 
 

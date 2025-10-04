@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -9,6 +10,7 @@ from app.core.database import get_session
 from app.core.security import require_member
 from app.schemas.tasks import TaskStatuses
 from app.schemas.teams import UserRoles
+from app.services.calendar import CalendarService, get_calendar_service
 from app.services.tasks import TaskService, get_task_service
 from app.services.teams import TeamService, get_team_service
 
@@ -48,6 +50,7 @@ async def team_page(
     session: Annotated[AsyncSession, Depends(get_session)],
     task_service: Annotated[TaskService, Depends(get_task_service)],
     team_service: Annotated[TeamService, Depends(get_team_service)],
+    calendar_service: Annotated[CalendarService, Depends(get_calendar_service)],
 ):
     context = request.state.context
     context['team_id'] = team_id
@@ -77,6 +80,10 @@ async def team_page(
             context['users'] = users
 
             context['evaluation'] = await team_service.get_avg_evaluation(user.user_id, team_id)
+
+            now = datetime.now()
+            context['calendar_day'] = await calendar_service.get_calendar_by_date(team_id, now.date())
+            context['calendar_month'] = await calendar_service.get_calendar_by_month(team_id, now.year, now.month)
         except HTTPException:
             ...
 
