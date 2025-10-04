@@ -25,3 +25,8 @@
 .tasks-name {
     font-size: 1.2rem;
 }
+
+
+#exclude-user-form {
+    flex-direction: row;
+}

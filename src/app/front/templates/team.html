@@ -17,7 +17,12 @@
         <div class="users">
             <h2>Все члены комады</h2>
             {% for user in context.users %}
-                <p>Пользователь: {{ user.username }} (Роль: {{ user.role }}, ID: {{user.user_id}})</p>
+                <form id="exclude-user-form" data-user-id="{{ user.user_id }}">
+                    <p>Пользователь
+                        {% if user.user_id == context.user.id %}(Вы){% endif %}
+                        : {{ user.username }} (Роль: {{ user.role }}, ID: {{user.user_id}})</p>
+                    <button class="form-btn">Исключить</button>
+                </form>        
             {% endfor %}
         </div>
 
@@ -40,6 +45,7 @@
             <button class="form-btn">Отправить</button>
 
             <script>
+                // add user form
                 document.getElementById("add-user-form").addEventListener("submit", async (event) => {
                     event.preventDefault();
 
@@ -65,6 +71,36 @@
                             window.location.reload();
                         } else {
                             alert("Ошибка при добавление / изменении");
+                        }
+                    } catch {
+                        alert("Ошибка сети");
+                    }
+                });
+
+                // exclude user form
+                document.getElementById("exclude-user-form").addEventListener("submit", async (event) => {
+                    event.preventDefault();
+
+                    const token = document.cookie
+                        .split("; ")
+                        .find(row => row.startsWith("access_token="))
+                        ?.split("=")[1];
+
+                    const user_id = event.target.dataset.userId;
+
+                    try {
+                        const response = await fetch(`/api/teams/{{ context.team_id }}/users/${user_id}`, {
+                            method: "DELETE",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": `Bearer ${token}`,
+                            },                            
+                        });
+
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            alert("Ошибка при исключении пользователя");
                         }
                     } catch {
                         alert("Ошибка сети");
