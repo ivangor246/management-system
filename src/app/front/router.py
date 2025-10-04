@@ -75,6 +75,8 @@ async def team_page(
                 else:
                     user.role = 'Пользователь'
             context['users'] = users
+
+            context['evaluation'] = await team_service.get_avg_evaluation(user.user_id, team_id)
         except HTTPException:
             ...
 

@@ -13,6 +13,9 @@
     {% if context.user %}
         <h2 class="user-info"><b>Пользователь: </b>{{ context.user.username }}</h2>
         <p>Ваш ID: {{ context.user.id }}</p>
+        {% if context.evaluation %}
+            <p>Ваша средняя оценка задач: {{ context.evaluation }}</p>
+        {% endif %}
 
         <div class="users">
             <h2>Все члены комады</h2>
