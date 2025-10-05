@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Встреча{% endblock title %}
+
+{% block links %}
+    <link rel="stylesheet" href="/static/meeting.css">
+{% endblock links %}
+
+
+{% block content %}
+    <h1>Встреча</h1>
+
+    {% if context.user and not context.error and context.role in ["Админ", "Менеджер"] %}
+
+        <p><b>Название: </b>{{ context.meeting.name }}</p>
+        <p><b>Дата: </b>{{ context.meeting.date }}</p>
+        <p><b>Время: </b>{{ context.meeting.time.strftime("%H:%M") }}</p>
+        <p><b>Участники: </b>
+            {% for member in context.meeting.users %}
+                {{ member.username }}{% if not loop.last %}, {% endif %}
+            {% endfor %}
+        </p>
+
+        <form id="update-meeting-form" class="page-form">
+            <h2>Изменить встречу</h2>
+
+            <div class="input-block">
+                <label for="name-input">Название:</label>
+                <input type="text" name="name" id="name-input">
+            </div>
+
+            <div class="input-block">
+                <label for="date-input">Дата:</label>
+                <input type="date" name="date" id="date-input">
+            </div>
+
+            <div class="input-block">
+                <label for="time-input">Время:</label>
+                <input type="time" name="time" id="time-input">
+            </div>
+
+            <div class="input-block">
+                <label for="member-ids-select">Участники:</label>
+                <select name="member_ids" id="member-ids-select" multiple>
+                    {% for user in context.users %}
+                        <option value="{{ user.user_id }}">{{ user.username }} (ID: {{ user.user_id }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button class="form-btn">Отправить</button>
+
+            <script>
+                document.getElementById("update-meeting-form").addEventListener("submit", async (event) => {
+                    event.preventDefault();
+
+                    const token = document.cookie
+                        .split("; ")
+                        .find(row => row.startsWith("access_token="))
+                        ?.split("=")[1];
+
+                    const form = event.target;
+                    const form_data = new FormData(form);
+                    const data = Object.fromEntries(form_data);
+
+                    const selectedOptions = Array.from(form.querySelectorAll("#member-ids-select option:checked"));
+                    const memberIds = selectedOptions.map(option => Number(option.value));
+
+                    if (memberIds.length > 0) {
+                        data.member_ids = memberIds;
+                    }
+
+                    Object.keys(data).forEach((key) => {
+                        if (data[key] === "" || data[key] == null) {
+                            delete data[key];
+                        }
+                    });
+
+                    try {
+                        const response = await fetch("/api/teams/{{ context.team_id }}/meetings/{{ context.meeting_id }}", {
+                            method: "PUT",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": `Bearer ${token}`,
+                            },
+                            body: JSON.stringify(data),
+                        });
+
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            alert("Ошибка при обновлении данных");
+                        }
+                    } catch {
+                        alert("Ошибка сети");
+                    }
+                });
+                </script>
+        </form>
+
+
+        <form id="delete-meeting-form" class="page-form">
+            <h2>Удалить встречу</h2>
+            <button class="form-btn">Удалить</button>
+
+            <script>
+                document.getElementById("delete-meeting-form").addEventListener("submit", async (event) => {
+                    event.preventDefault();
+
+                    const token = document.cookie
+                        .split("; ")
+                        .find(row => row.startsWith("access_token="))
+                        ?.split("=")[1];
+
+                    try {
+                        const response = await fetch("/api/teams/{{ context.team_id }}/meetings/{{ context.meeting_id }}", {
+                            method: "DELETE",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": `Bearer ${token}`,
+                            },                            
+                        });
+
+                        if (response.ok) {
+                            window.location.href = "/teams/{{ context.team_id }}";
+                        } else {
+                            alert("Ошибка при удалении встречи");
+                        }
+                    } catch {
+                        alert("Ошибка сети");
+                    }
+                });              
+            </script>
+        </form>
+
+    {% else %}
+        <script>
+            (() => {
+                document.location.href = "/";
+            })();
+        </script>
+    {% endif %}
+
+{% endblock content %}

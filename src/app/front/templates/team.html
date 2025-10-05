@@ -1,0 +1,310 @@
+{% extends "base.html" %}
+
+{% block title %}Команда{% endblock title %}
+
+{% block links %}
+    <link rel="stylesheet" href="/static/team.css">
+{% endblock links %}
+
+
+{% block content %}
+    <h1>Команда</h1>
+
+    {% if context.user and not context.error %}
+        <h2 class="user-info"><b>Пользователь: </b>{{ context.user.username }}</h2>
+        <p>Ваш ID: {{ context.user.id }}</p>
+        <p>Ваша роль: {{ context.role }}</p>
+        {% if context.evaluation %}
+            <p>Ваша средняя оценка задач: {{ context.evaluation }}</p>
+        {% endif %}
+        <a href="/teams/{{ context.team_id }}/calendar">Календарь для этой команды</a>
+
+        <div class="users">
+            <h2>Все члены комады</h2>
+            {% for user in context.users %}
+                <form class="exclude-user-form" data-user-id="{{ user.user_id }}">
+                    <p>Пользователь
+                        {% if user.user_id == context.user.id %}(Вы){% endif %}
+                        : {{ user.username }} (Роль: {{ user.role }}, ID: {{user.user_id}})</p>
+
+                    {% if context.role == "Админ" %}
+                        <button class="form-btn">Исключить</button>
+                    {% endif %}
+                </form>        
+            {% endfor %}
+        </div>
+
+        {% if context.role == "Админ" %}
+            <form id="add-user-form" class="page-form">
+                <h2>Добавить / изменить роль пользователя</h2>
+
+                <div class="input-block">
+                    <label for="user-id-input">ID пользователя:</label>
+                    <input type="text" name="user_id" required id="user-id-input">
+                </div>
+
+                <div class="input-block">
+                    <label for="role-select">Роль:</label>
+                    <select name="role" id="role-select">
+                        <option value="u">Пользователь</option>
+                        <option value="m">Менеджер</option>
+                        <option value="a">Админ</option>
+                    </select>
+                </div>
+
+                <button class="form-btn">Отправить</button>
+            </form>
+        {% endif %}
+
+        {% if context.role in ["Админ", "Менеджер"] %}
+            <form id="add-task-form" class="page-form">
+                <h2>Создать задачу</h2>
+
+                <div class="input-block">
+                    <label for="description-input">Описание:</label>
+                    <input type="text" name="description" required id="description-input">
+                </div>
+
+                <div class="input-block">
+                    <label for="deadline-input">Дедлайн:</label>
+                    <input type="date" name="deadline" required id="deadline-input">
+                </div>
+
+                <div class="input-block">
+                    <label for="performer-id-input">ID исполнителя:</label>
+                    <input type="text" name="performer_id" required id="performer-id-input">
+                </div>
+
+                <div class="input-block">
+                    <label for="status-select">Статус:</label>
+                    <select name="status" id="status-select">
+                        <option value="o">Открыта</option>
+                        <option value="w">В работе</option>
+                    </select>
+                </div>
+
+                <button class="form-btn">Отправить</button>
+            </form>
+
+            <form id="add-meeting-form" class="page-form">
+                <h2>Создать встречу</h2>
+
+                <div class="input-block">
+                    <label for="name-input">Название:</label>
+                    <input type="text" name="name" required id="name-input">
+                </div>
+
+                <div class="input-block">
+                    <label for="date-input">Дата:</label>
+                    <input type="date" name="date" required id="date-input">
+                </div>
+
+                <div class="input-block">
+                    <label for="time-input">Время:</label>
+                    <input type="time" name="time" required id="time-input">
+                </div>
+
+                <div class="input-block">
+                    <label for="member-ids-select">Участники:</label>
+                    <select name="member_ids" id="member-ids-select" multiple required>
+                        {% for user in context.users %}
+                            <option value="{{ user.user_id }}">{{ user.username }} (ID: {{ user.user_id }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <button class="form-btn">Отправить</button>
+            </form>
+        {% endif %}
+
+        
+        <script>
+            // add meeting form
+            document.getElementById("add-meeting-form").addEventListener("submit", async (event) => {
+                event.preventDefault();
+
+                const token = document.cookie
+                    .split("; ")
+                    .find(row => row.startsWith("access_token="))
+                    ?.split("=")[1];
+
+                const form = event.target;
+                const form_data = new FormData(form);
+                const data = Object.fromEntries(form_data);
+
+                const selectedOptions = Array.from(form.querySelectorAll("#member-ids-select option:checked"));
+                const memberIds = selectedOptions.map(option => Number(option.value));
+
+                if (memberIds.length === 0) {
+                    alert("Выберите хотя бы одного участника");
+                    return;
+                }
+
+                data.member_ids = memberIds;
+
+                try {
+                    const response = await fetch("/api/teams/{{ context.team_id }}/meetings", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`,
+                        },
+                        body: JSON.stringify(data),
+                    });
+
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert("Ошибка при создании встречи");
+                    }
+                } catch {
+                    alert("Ошибка сети");
+                }
+            });
+
+            // add user form
+            document.getElementById("add-user-form").addEventListener("submit", async (event) => {
+                event.preventDefault();
+
+                const token = document.cookie
+                    .split("; ")
+                    .find(row => row.startsWith("access_token="))
+                    ?.split("=")[1];
+
+                const form_data = new FormData(event.target);
+                const data = Object.fromEntries(form_data);
+
+                try {
+                    const response = await fetch("/api/teams/{{ context.team_id }}/users", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`,
+                        },
+                        body: JSON.stringify(data),
+                    });
+
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert("Ошибка при добавлени / изменении");
+                    }
+                } catch {
+                    alert("Ошибка сети");
+                }
+            });
+
+            // exclude user form
+            document.querySelectorAll(".exclude-user-form").forEach(form => {
+                form.addEventListener("submit", async (event) => {
+                    event.preventDefault();
+
+                    const token = document.cookie
+                        .split("; ")
+                        .find(row => row.startsWith("access_token="))
+                        ?.split("=")[1];
+
+                    const user_id = form.dataset.userId;
+
+                    try {
+                        const response = await fetch(`/api/teams/{{ context.team_id }}/users/${user_id}`, {
+                            method: "DELETE",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": `Bearer ${token}`,
+                            },
+                        });
+
+                        if (response.ok) {
+                            form.remove(); // можно удалить элемент без перезагрузки
+                        } else {
+                            alert("Ошибка при исключении пользователя");
+                        }
+                    } catch {
+                        alert("Ошибка сети");
+                    }
+                });
+            });
+
+            // add task form
+            document.getElementById("add-task-form").addEventListener("submit", async (event) => {
+                event.preventDefault();
+
+                const token = document.cookie
+                    .split("; ")
+                    .find(row => row.startsWith("access_token="))
+                    ?.split("=")[1];
+
+                const form_data = new FormData(event.target);
+                const data = Object.fromEntries(form_data);
+
+                try {
+                    const response = await fetch("/api/teams/{{ context.team_id }}/tasks", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`,
+                        },
+                        body: JSON.stringify(data),
+                    });
+
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert("Ошибка при создании задачи");
+                    }
+                } catch {
+                    alert("Ошибка сети");
+                }
+            });
+        </script>
+
+        <div class="tasks">
+            {% if context.tasks %}
+                <h2>Задачи</h2>
+                {% for task in context.tasks %}
+                    <div class="task-block">
+                        <a href="/teams/{{ context.team_id }}/tasks/{{ task.id }}"><b>Описание: </b>{{ task.description }}</a>
+                        <p><b>Дедлайн: </b>{{ task.deadline }}</p>
+                        <p><b>Статус: </b>{{ task.status }}</p>
+                        <p><b>ID исполнителя: </b>{{ task.performer_id }}</p>
+                    </div>
+                    <div class="hor-line"></div>
+                {% endfor %}
+            {% else %}
+                <h2>Задачи не найдены</h2>
+            {% endif %}
+        </div>
+
+        <div class="meetings">
+            {% if context.meetings %}
+                <h2>Встречи</h2>
+                {% for meeting in context.meetings %}
+                    <div class="meeting-block">
+                        {% if context.role in ["Админ", "Менеджер"] %}
+                            <p><a href="/teams/{{ context.team_id }}/meetings/{{ meeting.id }}"><b>Название: </b>{{ meeting.name }}</a></p>
+                        {% else %}
+                            <p><b>Название: </b>{{ meeting.name }}</p>
+                        {% endif %}
+                        <p><b>Дата: </b>{{ meeting.date }}</p>
+                        <p><b>Время: </b>{{ meeting.time.strftime("%H:%M") }}</p>
+                        <p><b>Участники: </b>
+                            {% for member in meeting.users %}
+                                {{ member.username }}{% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                        </p>
+                    </div>
+                    <div class="hor-line"></div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+    {% else %}
+        <script>
+            (() => {
+                document.location.href = "/";
+            })();
+        </script>
+    {% endif %}
+
+{% endblock content %}

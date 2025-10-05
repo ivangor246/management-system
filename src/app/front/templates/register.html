@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Регистрация{% endblock title %}
+
+{% block content %}
+    <h1>Регистрация</h1>
+
+    <form id="register-form" class="page-form">
+        <div class="input-block">
+            <label for="username-input">Имя пользователя:</label>
+            <input type="text" name="username" required id="username-input">
+        </div>
+
+        <div class="input-block">
+            <label for="email-input">Почта:</label>
+            <input type="text" name="email" required id="email-input">
+        </div>
+
+        <div class="input-block">
+            <label for="password-input">Пароль:</label>
+            <input type="text" name="password" required id="password-input">
+        </div>
+
+        <div class="input-block">
+            <label for="first-name-input">Имя:</label>
+            <input type="text" name="first_name" required id="first-name-input">
+        </div>
+
+        <div class="input-block">
+            <label for="last-name-input">Фамилия (опционально):</label>
+            <input type="text" name="last_name" id="last-name-input">
+        </div>
+
+        <button class="form-btn">Отправить</button>
+    </form>
+
+    <p id="message"></p>
+
+    <script>
+        document.getElementById("register-form").addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const form_data = new FormData(event.target);
+            const data = Object.fromEntries(form_data);
+
+            try {
+                const response = await fetch("/api/auth/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data),
+                });
+
+                if (response.ok) {
+                    window.location.href = "/login";
+                } else {
+                    document.getElementById("message").textContent = "Ошибка при регистрации";
+                }
+            } catch {
+                document.getElementById("message").textContent = "Ошибка сети";
+            }
+        });
+    </script>
+{% endblock content %}

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Управление командой{% endblock title %}</title>
+    <link rel="stylesheet" href="/static/reset.css">
+    <link rel="stylesheet" href="/static/main.css">
+    {% block links %}{% endblock links %}
+</head>
+<body>
+    <div class="wrapper">
+        <header>
+            <div class="container">
+                <div class="header__links">
+                    <a href="/">Главная</a>
+                    {% if not context.is_auth %}
+                        <a href="/register">Регистрация</a>
+                        <a href="/login">Войти</a>
+                    {% else %}
+                        <a href="/profile">Профиль</a>
+                        <a id="logout-btn">Выйти</a>
+                    {% endif %}
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div class="container">
+                {% block content %}{% endblock content %}
+            </div>
+        </main>
+
+        <footer>
+            <div class="container">
+                &copy;
+                <script>document.write(new Date().getFullYear());</script>
+                Система управления командой
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById("logout-btn").addEventListener("click", async (event) => {
+            event.preventDefault();
+
+            const token = document.cookie
+                .split("; ")
+                .find(row => row.startsWith("access_token="))
+                ?.split("=")[1];
+
+            if (!token) {
+                alert("Вы не авторизованы");
+                return;
+            }
+
+            try {
+                const response = await fetch("/api/auth/logout", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ token }),
+                });
+
+                if (response.ok) {
+                    document.cookie = `access_token=;path=/;SameSite=Lax;max-age=0`;
+                    window.location.href = "/login";
+                } else {
+                    alert("Ошибка при выходе");
+                }
+            } catch {
+                alert("Ошибка сети");
+            }
+        });
+    </script>
+</body>
+</html>

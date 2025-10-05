@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Главная{% endblock title %}
+
+{% block links %}
+    <link rel="stylesheet" href="/static/home.css">
+{% endblock links %}
+
+
+{% block content %}
+    <h1>Главная</h1>
+
+    {% if context.user %}
+        <h2 class="user-info"><b>Пользователь: </b>{{ context.user.username }}</h2>
+        <p>Ваш ID: {{ context.user.id }}</p>
+
+        <form id="create-team-form" class="page-form">
+            <h2>Создать команду</h2>
+            <div class="input-block">
+                <label for="name-input">Название команды:</label>
+                <input type="text" name="name" required id="name-input">
+            </div>
+
+            <button class="form-btn">Отправить</button>
+        </form>
+
+        <div class="teams">
+            {% if context.teams %}
+                <h2>Ваши команды</h2>
+                    {% for team in context.teams %}
+                        <div class="team-block">
+                            <a href="/teams/{{ team.team_id }}" class="team-name">{{ team.name }}</a>
+                            <p>Ваша роль: {{ team.role }}</p>
+                        </div>
+                        <div class="hor-line"></div>
+                    {% endfor %}
+            {% else %}
+                <h2>Команды не найдены</h2>
+            {% endif %}
+        </div>
+
+        <script>
+            document.getElementById("create-team-form").addEventListener("submit", async (event) => {
+                event.preventDefault();
+
+                const token = document.cookie
+                    .split("; ")
+                    .find(row => row.startsWith("access_token="))
+                    ?.split("=")[1];
+
+                const form_data = new FormData(event.target);
+                const data = Object.fromEntries(form_data);
+
+                try {
+                    const response = await fetch("/api/teams", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`,
+                        },
+                        body: JSON.stringify(data),
+                    });
+
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert("Ошибка при создании");
+                    }
+                } catch {
+                    alert("Ошибка сети");
+                }
+            });
+        </script>
+
+    {% else %}
+        <h2 class="user-info">Вы не авторизованы</h2>
+        <script>
+            (() => {
+                const token = document.cookie
+                    .split("; ")
+                    .find(row => row.startsWith("access_token="))
+                    ?.split("=")[1];
+
+                if (token) {
+                    document.cookie = `access_token=;path=/;SameSite=Lax;max-age=0`;
+                }
+            })();
+        </script>
+    {% endif %}
+
+{% endblock content %}

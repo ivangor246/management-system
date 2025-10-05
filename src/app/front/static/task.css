@@ -1,0 +1,10 @@
+.comments {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.delete-comment-form {
+    align-items: start;
+}

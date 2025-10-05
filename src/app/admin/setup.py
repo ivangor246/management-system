@@ -8,7 +8,7 @@ and registers admin views for the main models.
 from fastapi import FastAPI
 from sqladmin import Admin
 from sqlalchemy import inspect, select
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import IntegrityError
 
 from app.core.config import config
 from app.core.database import engine, session_factory
@@ -28,11 +28,12 @@ async def create_admin_if_not_exists():
     Runs only if the `users` table exists.
     """
     async with session_factory() as session:
-        try:
-            inspector = inspect(session.bind)
-            if 'users' not in inspector.get_table_names():
-                return
-        except SQLAlchemyError:
+        engine = session.bind
+
+        async with engine.begin() as conn:
+            users_exist = await conn.run_sync(lambda sync_conn: 'users' in inspect(sync_conn).get_table_names())
+
+        if not users_exist:
             return
 
         stmt = select(User).where(User.username == config.ADMIN_NAME)
@@ -49,7 +50,10 @@ async def create_admin_if_not_exists():
                 is_admin=True,
             )
             session.add(admin)
-            await session.commit()
+            try:
+                await session.commit()
+            except IntegrityError:
+                await session.rollback()
 
 
 def init_admin(app: FastAPI):
