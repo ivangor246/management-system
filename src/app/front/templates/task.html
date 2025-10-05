@@ -88,6 +88,40 @@
                     });
                 </script>
             </form>
+
+            <form id="delete-task-form" class="page-form">
+                <h2>Удалить Задачу</h2>
+                <button class="form-btn">Удалить</button>
+
+                <script>
+                    document.getElementById("delete-task-form").addEventListener("submit", async (event) => {
+                        event.preventDefault();
+
+                        const token = document.cookie
+                            .split("; ")
+                            .find(row => row.startsWith("access_token="))
+                            ?.split("=")[1];
+
+                        try {
+                            const response = await fetch("/api/teams/{{ context.team_id }}/tasks/{{ context.task_id }}", {
+                                method: "DELETE",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Authorization": `Bearer ${token}`,
+                                },                            
+                            });
+
+                            if (response.ok) {
+                                window.location.href = "/teams/{{ context.team_id }}";
+                            } else {
+                                alert("Ошибка при удалении задачи");
+                            }
+                        } catch {
+                            alert("Ошибка сети");
+                        }
+                    });              
+                </script>
+            </form>
         {% endif %}
 
     {% else %}
