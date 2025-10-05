@@ -135,7 +135,7 @@ async def meeting_page(
     meeting_id: int,
     request: Request,
     session: Annotated[AsyncSession, Depends(get_session)],
-    comment_service: Annotated[CommentService, Depends(get_comment_service)],
+    team_service: Annotated[TeamService, Depends(get_team_service)],
 ):
     context = request.state.context
     context['team_id'] = team_id
@@ -150,6 +150,11 @@ async def meeting_page(
 
             meeting = await get_meeting_by_id(session, meeting_id)
             context['meeting'] = meeting
+
+            users = await team_service.get_users(team_id)
+            for user in users:
+                user.role = convert_roles[user.role]
+            context['users'] = users
 
         except Exception:
             context['error'] = True

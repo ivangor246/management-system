@@ -105,7 +105,7 @@
 
                 <div class="input-block">
                     <label for="member-ids-select">Участники:</label>
-                    <select name="member_ids" id="member-ids-select" multiple size="5" required>
+                    <select name="member_ids" id="member-ids-select" multiple required>
                         {% for user in context.users %}
                             <option value="{{ user.user_id }}">{{ user.username }} (ID: {{ user.user_id }})</option>
                         {% endfor %}
