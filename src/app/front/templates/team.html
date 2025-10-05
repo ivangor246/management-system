@@ -280,7 +280,11 @@
                 <h2>Встречи</h2>
                 {% for meeting in context.meetings %}
                     <div class="meeting-block">
-                        <p><b>Название: </b>{{ meeting.name }}</p>
+                        {% if context.role in ["Админ", "Менеджер"] %}
+                            <p><a href="/teams/{{ context.team_id }}/meetings/{{ meeting.id }}"><b>Название: </b>{{ meeting.name }}</a></p>
+                        {% else %}
+                            <p><b>Название: </b>{{ meeting.name }}</p>
+                        {% endif %}
                         <p><b>Дата: </b>{{ meeting.date }}</p>
                         <p><b>Время: </b>{{ meeting.time.strftime("%H:%M") }}</p>
                         <p><b>Участники: </b>

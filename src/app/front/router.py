@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
-from app.core.security import require_member
+from app.core.security import require_manager, require_member
 from app.schemas.tasks import TaskStatuses
 from app.schemas.teams import UserRoles
 from app.services.calendar import CalendarService, get_calendar_service
@@ -16,7 +16,7 @@ from app.services.meetings import MeetingService, get_meeting_service
 from app.services.tasks import TaskService, get_task_service
 from app.services.teams import TeamService, get_team_service
 
-from .utils import get_context, get_task_by_id, get_team_role
+from .utils import get_context, get_meeting_by_id, get_task_by_id, get_team_role
 
 templates = Jinja2Templates(directory='app/front/templates')
 
@@ -127,6 +127,34 @@ async def task_page(
             context['error'] = True
 
     return templates.TemplateResponse('task.html', {'request': request, 'context': context})
+
+
+@front_router.get('/teams/{team_id:int}/meetings/{meeting_id:int}', response_class=HTMLResponse)
+async def meeting_page(
+    team_id: int,
+    meeting_id: int,
+    request: Request,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    comment_service: Annotated[CommentService, Depends(get_comment_service)],
+):
+    context = request.state.context
+    context['team_id'] = team_id
+    context['meeting_id'] = meeting_id
+    user = context.get('user')
+    if user:
+        try:
+            await require_manager(team_id, user, session)
+
+            role = await get_team_role(session, user.id, team_id)
+            context['role'] = convert_roles[role]
+
+            meeting = await get_meeting_by_id(session, meeting_id)
+            context['meeting'] = meeting
+
+        except Exception:
+            context['error'] = True
+
+    return templates.TemplateResponse('meeting.html', {'request': request, 'context': context})
 
 
 @front_router.get('/register', response_class=HTMLResponse)

@@ -8,8 +8,10 @@ from sqlalchemy.orm import selectinload
 
 from app.core.database import get_session
 from app.core.security import get_request_user
+from app.models.meetings import Meeting
 from app.models.tasks import Task
 from app.models.teams import UserTeam
+from app.schemas.meetings import MeetingSchema
 from app.schemas.tasks import TaskSchema
 from app.schemas.teams import UserRoles
 
@@ -59,3 +61,13 @@ async def get_task_by_id(
     result = await session.execute(stmt)
     task = result.scalar_one_or_none()
     return TaskSchema.model_validate(task)
+
+
+async def get_meeting_by_id(
+    session: AsyncSession,
+    meeting_id: int,
+) -> TaskSchema:
+    stmt = select(Meeting).where(Meeting.id == meeting_id)
+    result = await session.execute(stmt)
+    meeting = result.scalar_one_or_none()
+    return MeetingSchema.model_validate(meeting)

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Встреча{% endblock title %}
+
+{% block links %}
+    <link rel="stylesheet" href="/static/meeting.css">
+{% endblock links %}
+
+
+{% block content %}
+    <h1>Встреча</h1>
+
+    {% if context.user and not context.error and context.role in ["Админ", "Менеджер"] %}
+
+        <p><b>Название: </b>{{ context.meeting.name }}</p>
+        <p><b>Дата: </b>{{ context.meeting.date }}</p>
+        <p><b>Время: </b>{{ context.meeting.time.strftime("%H:%M") }}</p>
+        <p><b>Участники: </b>
+            {% for member in context.meeting.users %}
+                {{ member.username }}{% if not loop.last %}, {% endif %}
+            {% endfor %}
+        </p>
+
+    {% else %}
+        <script>
+            (() => {
+                document.location.href = "/";
+            })();
+        </script>
+    {% endif %}
+
+{% endblock content %}
