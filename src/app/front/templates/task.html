@@ -223,8 +223,8 @@
                 {% for comment in context.comments %}
                     <form class="delete-comment-form" data-comment-id="{{ comment.id }}">
                         <div class="comment-block">
-                            <p>Текст: <b>{{ comment.text }}</b></p>
-                            <p>ID отправителя: <b>{{ comment.user_id }}</b></p>
+                            <p><b>Текст: </b>{{ comment.text }}</p>
+                            <p><b>ID отправителя: </b>{{ comment.user_id }}</p>
                         </div>
 
                         {% if comment.user_id == context.user.id %}

@@ -261,17 +261,36 @@
         <div class="tasks">
             {% if context.tasks %}
                 <h2>Задачи</h2>
-                    {% for task in context.tasks %}
-                        <div class="task-block">
-                            <a href="/teams/{{ context.team_id }}/tasks/{{ task.id }}"><b>Описание: </b>{{ task.description }}</a>
-                            <p><b>Дедлайн: </b>{{ task.deadline }}</p>
-                            <p><b>Статус: </b>{{ task.status }}</p>
-                            <p><b>ID исполнителя: </b>{{ task.performer_id }}</p>
-                        </div>
-                        <div class="hor-line"></div>
-                    {% endfor %}
+                {% for task in context.tasks %}
+                    <div class="task-block">
+                        <a href="/teams/{{ context.team_id }}/tasks/{{ task.id }}"><b>Описание: </b>{{ task.description }}</a>
+                        <p><b>Дедлайн: </b>{{ task.deadline }}</p>
+                        <p><b>Статус: </b>{{ task.status }}</p>
+                        <p><b>ID исполнителя: </b>{{ task.performer_id }}</p>
+                    </div>
+                    <div class="hor-line"></div>
+                {% endfor %}
             {% else %}
                 <h2>Задачи не найдены</h2>
+            {% endif %}
+        </div>
+
+        <div class="meetings">
+            {% if context.meetings %}
+                <h2>Встречи</h2>
+                {% for meeting in context.meetings %}
+                    <div class="meeting-block">
+                        <p><b>Название: </b>{{ meeting.name }}</p>
+                        <p><b>Дата: </b>{{ meeting.date }}</p>
+                        <p><b>Время: </b>{{ meeting.time.strftime("%H:%M") }}</p>
+                        <p><b>Участники: </b>
+                            {% for member in meeting.users %}
+                                {{ member.username }}{% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                        </p>
+                    </div>
+                    <div class="hor-line"></div>
+                {% endfor %}
             {% endif %}
         </div>
 

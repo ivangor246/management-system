@@ -12,6 +12,7 @@ from app.schemas.tasks import TaskStatuses
 from app.schemas.teams import UserRoles
 from app.services.calendar import CalendarService, get_calendar_service
 from app.services.comments import CommentService, get_comment_service
+from app.services.meetings import MeetingService, get_meeting_service
 from app.services.tasks import TaskService, get_task_service
 from app.services.teams import TeamService, get_team_service
 
@@ -60,6 +61,7 @@ async def team_page(
     task_service: Annotated[TaskService, Depends(get_task_service)],
     team_service: Annotated[TeamService, Depends(get_team_service)],
     calendar_service: Annotated[CalendarService, Depends(get_calendar_service)],
+    meeting_service: Annotated[MeetingService, Depends(get_meeting_service)],
 ):
     context = request.state.context
     context['team_id'] = team_id
@@ -82,6 +84,9 @@ async def team_page(
             context['users'] = users
 
             context['evaluation'] = await team_service.get_avg_evaluation(user.user_id, team_id)
+
+            meetings = await meeting_service.get_meetings_by_team(team_id)
+            context['meetings'] = meetings
 
             now = datetime.now()
             context['calendar_day'] = await calendar_service.get_calendar_by_date(team_id, now.date())
