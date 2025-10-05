@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
 from app.core.security import get_request_user
+from app.models.tasks import Task
 from app.models.teams import UserTeam
 from app.schemas.teams import UserRoles
 
@@ -21,6 +22,7 @@ async def get_context(
     context = {
         'is_auth': False,
         'user': None,
+        'error': False,
     }
 
     try:
@@ -45,3 +47,12 @@ async def get_team_role(
     result = await session.execute(stmt)
     association = result.scalar_one_or_none()
     return association.role
+
+
+async def get_task_by_id(
+    session: AsyncSession,
+    task_id: int,
+) -> Task:
+    stmt = select(Task).where(Task.id == task_id)
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none()

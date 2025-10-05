@@ -10,7 +10,7 @@
 {% block content %}
     <h1>Команда</h1>
 
-    {% if context.user %}
+    {% if context.user and not context.error %}
         <h2 class="user-info"><b>Пользователь: </b>{{ context.user.username }}</h2>
         <p>Ваш ID: {{ context.user.id }}</p>
         <p>Ваша роль: {{ context.role }}</p>
@@ -188,7 +188,7 @@
                 <h2>Задачи</h2>
                     {% for task in context.tasks %}
                         <div class="task-block">
-                            <p><b>Описание: </b>{{ task.description }}</p>
+                            <a href="/teams/{{ context.team_id }}/tasks/{{ task.id }}"><b>Описание: </b>{{ task.description }}</a>
                             <p><b>Дедлайн: </b>{{ task.deadline }}</p>
                             <p><b>Статус: </b>{{ task.status }}</p>
                             <p><b>ID исполнителя: </b>{{ task.performer_id }}</p>

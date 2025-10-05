@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Задача{% endblock title %}
+
+{% block links %}
+    <link rel="stylesheet" href="/static/task.css">
+{% endblock links %}
+
+
+{% block content %}
+    <h1>Задача</h1>
+
+    {% if context.user and not context.error and context.task %}
+        <div class="task-block">
+            <p><b>Описание: </b>{{ context.task.description }}</p>
+            <p><b>Дедлайн: </b>{{ context.task.deadline }}</p>
+            <p><b>Статус: </b>{{ context.task.status }}</p>
+            <p><b>ID исполнителя: </b>{{ context.task.performer_id }}</p>
+        </div>
+
+    {% else %}
+        <script>
+            (() => {
+                document.location.href = "/";
+            })();
+        </script>
+    {% endif %}
+
+{% endblock content %}

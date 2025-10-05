@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,7 +14,7 @@ from app.services.calendar import CalendarService, get_calendar_service
 from app.services.tasks import TaskService, get_task_service
 from app.services.teams import TeamService, get_team_service
 
-from .utils import get_context, get_team_role
+from .utils import get_context, get_task_by_id, get_team_role
 
 templates = Jinja2Templates(directory='app/front/templates')
 
@@ -45,7 +45,7 @@ async def home_page(
     if user:
         teams = await team_service.get_teams_by_user(user.id)
         for team in teams:
-            team.role = convert_roles(team.role)
+            team.role = convert_roles[team.role]
         context['teams'] = teams
 
     return templates.TemplateResponse('home.html', {'request': request, 'context': context})
@@ -85,10 +85,38 @@ async def team_page(
             now = datetime.now()
             context['calendar_day'] = await calendar_service.get_calendar_by_date(team_id, now.date())
             context['calendar_month'] = await calendar_service.get_calendar_by_month(team_id, now.year, now.month)
-        except HTTPException:
-            ...
+        except Exception:
+            context['error'] = True
 
     return templates.TemplateResponse('team.html', {'request': request, 'context': context})
+
+
+@front_router.get('/teams/{team_id:int}/tasks/{task_id:int}', response_class=HTMLResponse)
+async def task_page(
+    team_id: int,
+    task_id: int,
+    request: Request,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    task_service: Annotated[TaskService, Depends(get_task_service)],
+):
+    context = request.state.context
+    context['team_id'] = team_id
+    context['task_id'] = task_id
+    user = context.get('user')
+    if user:
+        try:
+            await require_member(team_id, user, session)
+
+            role = await get_team_role(session, user.id, team_id)
+            context['role'] = convert_roles[role]
+
+            task = await get_task_by_id(session, task_id)
+            context['task'] = task
+
+        except Exception:
+            context['error'] = True
+
+    return templates.TemplateResponse('task.html', {'request': request, 'context': context})
 
 
 @front_router.get('/register', response_class=HTMLResponse)
