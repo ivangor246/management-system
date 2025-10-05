@@ -49,54 +49,89 @@
             </div>
 
             <button class="form-btn">Отправить</button>
+
+            <script>
+                document.getElementById("update-meeting-form").addEventListener("submit", async (event) => {
+                    event.preventDefault();
+
+                    const token = document.cookie
+                        .split("; ")
+                        .find(row => row.startsWith("access_token="))
+                        ?.split("=")[1];
+
+                    const form = event.target;
+                    const form_data = new FormData(form);
+                    const data = Object.fromEntries(form_data);
+
+                    const selectedOptions = Array.from(form.querySelectorAll("#member-ids-select option:checked"));
+                    const memberIds = selectedOptions.map(option => Number(option.value));
+
+                    if (memberIds.length > 0) {
+                        data.member_ids = memberIds;
+                    }
+
+                    Object.keys(data).forEach((key) => {
+                        if (data[key] === "" || data[key] == null) {
+                            delete data[key];
+                        }
+                    });
+
+                    try {
+                        const response = await fetch("/api/teams/{{ context.team_id }}/meetings/{{ context.meeting_id }}", {
+                            method: "PUT",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": `Bearer ${token}`,
+                            },
+                            body: JSON.stringify(data),
+                        });
+
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            alert("Ошибка при обновлении данных");
+                        }
+                    } catch {
+                        alert("Ошибка сети");
+                    }
+                });
+                </script>
         </form>
 
-        <script>
-        document.getElementById("update-meeting-form").addEventListener("submit", async (event) => {
-            event.preventDefault();
 
-            const token = document.cookie
-                .split("; ")
-                .find(row => row.startsWith("access_token="))
-                ?.split("=")[1];
+        <form id="delete-meeting-form" class="page-form">
+            <h2>Удалить встречу</h2>
+            <button class="form-btn">Удалить</button>
 
-            const form = event.target;
-            const form_data = new FormData(form);
-            const data = Object.fromEntries(form_data);
+            <script>
+                document.getElementById("delete-meeting-form").addEventListener("submit", async (event) => {
+                    event.preventDefault();
 
-            const selectedOptions = Array.from(form.querySelectorAll("#member-ids-select option:checked"));
-            const memberIds = selectedOptions.map(option => Number(option.value));
+                    const token = document.cookie
+                        .split("; ")
+                        .find(row => row.startsWith("access_token="))
+                        ?.split("=")[1];
 
-            if (memberIds.length > 0) {
-                data.member_ids = memberIds;
-            }
+                    try {
+                        const response = await fetch("/api/teams/{{ context.team_id }}/meetings/{{ context.meeting_id }}", {
+                            method: "DELETE",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": `Bearer ${token}`,
+                            },                            
+                        });
 
-            Object.keys(data).forEach((key) => {
-                if (data[key] === "" || data[key] == null) {
-                    delete data[key];
-                }
-            });
-
-            try {
-                const response = await fetch("/api/teams/{{ context.team_id }}/meetings/{{ context.meeting.id }}", {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`,
-                    },
-                    body: JSON.stringify(data),
-                });
-
-                if (response.ok) {
-                    window.location.reload();
-                } else {
-                    alert("Ошибка при обновлении данных");
-                }
-            } catch {
-                alert("Ошибка сети");
-            }
-        });
-        </script>
+                        if (response.ok) {
+                            window.location.href = "/teams/{{ context.team_id }}";
+                        } else {
+                            alert("Ошибка при удалении встречи");
+                        }
+                    } catch {
+                        alert("Ошибка сети");
+                    }
+                });              
+            </script>
+        </form>
 
     {% else %}
         <script>
