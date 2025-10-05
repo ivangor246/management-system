@@ -13,6 +13,7 @@
     {% if context.user %}
         <h2 class="user-info"><b>Пользователь: </b>{{ context.user.username }}</h2>
         <p>Ваш ID: {{ context.user.id }}</p>
+        <p>Ваша роль: {{ context.role }}</p>
         {% if context.evaluation %}
             <p>Ваша средняя оценка задач: {{ context.evaluation }}</p>
         {% endif %}
@@ -24,60 +25,68 @@
                     <p>Пользователь
                         {% if user.user_id == context.user.id %}(Вы){% endif %}
                         : {{ user.username }} (Роль: {{ user.role }}, ID: {{user.user_id}})</p>
-                    <button class="form-btn">Исключить</button>
+
+                    {% if context.role == "Админ" %}
+                        <button class="form-btn">Исключить</button>
+                    {% endif %}
                 </form>        
             {% endfor %}
         </div>
 
-        <form id="add-user-form" class="page-form">
-            <h2>Добавить / изменить роль пользователя</h2>
+        {% if context.role == "Админ" %}
+            <form id="add-user-form" class="page-form">
+                <h2>Добавить / изменить роль пользователя</h2>
 
-            <div class="input-block">
-                <label for="user-id-input">ID пользователя:</label>
-                <input type="text" name="user_id" required id="user-id-input">
-            </div>
+                <div class="input-block">
+                    <label for="user-id-input">ID пользователя:</label>
+                    <input type="text" name="user_id" required id="user-id-input">
+                </div>
 
-            <div class="input-block">
-                <label for="role-select">Роль:</label>
-                <select name="role" id="role-select">
-                    <option value="u">Пользователь</option>
-                    <option value="m">Менеджер</option>
-                    <option value="a">Админ</option>
-                </select>
-            </div>
+                <div class="input-block">
+                    <label for="role-select">Роль:</label>
+                    <select name="role" id="role-select">
+                        <option value="u">Пользователь</option>
+                        <option value="m">Менеджер</option>
+                        <option value="a">Админ</option>
+                    </select>
+                </div>
 
-            <button class="form-btn">Отправить</button>
-        </form>
+                <button class="form-btn">Отправить</button>
+            </form>
+        {% endif %}
 
-        <form id="add-task-form" class="page-form">
-            <h2>Создать задачу</h2>
+        {% if context.role in ["Админ", "Менеджер"] %}
+            <form id="add-task-form" class="page-form">
+                <h2>Создать задачу</h2>
 
-            <div class="input-block">
-                <label for="description-input">Описание:</label>
-                <input type="text" name="description" required id="description-input">
-            </div>
+                <div class="input-block">
+                    <label for="description-input">Описание:</label>
+                    <input type="text" name="description" required id="description-input">
+                </div>
 
-            <div class="input-block">
-                <label for="deadline-input">Дедлайн:</label>
-                <input type="date" name="deadline" required id="deadline-input">
-            </div>
+                <div class="input-block">
+                    <label for="deadline-input">Дедлайн:</label>
+                    <input type="date" name="deadline" required id="deadline-input">
+                </div>
 
-            <div class="input-block">
-                <label for="performer-id-input">ID исполнителя:</label>
-                <input type="text" name="performer_id" required id="performer-id-input">
-            </div>
+                <div class="input-block">
+                    <label for="performer-id-input">ID исполнителя:</label>
+                    <input type="text" name="performer_id" required id="performer-id-input">
+                </div>
 
-            <div class="input-block">
-                <label for="status-select">Статус:</label>
-                <select name="status" id="status-select">
-                    <option value="o">Открыта</option>
-                    <option value="w">В работе</option>
-                </select>
-            </div>
+                <div class="input-block">
+                    <label for="status-select">Статус:</label>
+                    <select name="status" id="status-select">
+                        <option value="o">Открыта</option>
+                        <option value="w">В работе</option>
+                    </select>
+                </div>
 
-            <button class="form-btn">Отправить</button>
-        </form>
+                <button class="form-btn">Отправить</button>
+            </form>
+        {% endif %}
 
+        
         <script>
             // add user form
             document.getElementById("add-user-form").addEventListener("submit", async (event) => {

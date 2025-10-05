@@ -2,10 +2,13 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
 from app.core.security import get_request_user
+from app.models.teams import UserTeam
+from app.schemas.teams import UserRoles
 
 http_bearer = HTTPBearer(auto_error=False)
 
@@ -31,3 +34,14 @@ async def get_context(
 
     request.state.context = context
     return context
+
+
+async def get_team_role(
+    session: AsyncSession,
+    user_id: int,
+    team_id: int,
+) -> UserRoles:
+    stmt = select(UserTeam).where(UserTeam.user_id == user_id, UserTeam.team_id == team_id)
+    result = await session.execute(stmt)
+    association = result.scalar_one_or_none()
+    return association.role

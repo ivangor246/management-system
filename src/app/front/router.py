@@ -14,11 +14,24 @@ from app.services.calendar import CalendarService, get_calendar_service
 from app.services.tasks import TaskService, get_task_service
 from app.services.teams import TeamService, get_team_service
 
-from .utils import get_context
+from .utils import get_context, get_team_role
 
 templates = Jinja2Templates(directory='app/front/templates')
 
 front_router = APIRouter(dependencies=[Depends(get_context)])
+
+
+convert_roles = {
+    UserRoles.ADMIN: 'Админ',
+    UserRoles.MANAGER: 'Менеджер',
+    UserRoles.USER: 'Пользователь',
+}
+
+convert_statuses = {
+    TaskStatuses.OPEN: 'Открыта',
+    TaskStatuses.WORK: 'В работе',
+    TaskStatuses.COMPLETED: 'Завершена',
+}
 
 
 @front_router.get('/', response_class=HTMLResponse)
@@ -32,12 +45,7 @@ async def home_page(
     if user:
         teams = await team_service.get_teams_by_user(user.id)
         for team in teams:
-            if team.role == UserRoles.ADMIN:
-                team.role = 'Админ'
-            elif team.role == UserRoles.MANAGER:
-                team.role = 'Менеджер'
-            else:
-                team.role = 'Пользователь'
+            team.role = convert_roles(team.role)
         context['teams'] = teams
 
     return templates.TemplateResponse('home.html', {'request': request, 'context': context})
@@ -59,24 +67,17 @@ async def team_page(
         try:
             await require_member(team_id, user, session)
 
+            role = await get_team_role(session, user.id, team_id)
+            context['role'] = convert_roles[role]
+
             tasks = await task_service.get_tasks_by_team(team_id)
             for task in tasks:
-                if task.status == TaskStatuses.OPEN:
-                    task.status = 'Открыта'
-                elif task.status == TaskStatuses.WORK:
-                    task.status = 'В работе'
-                else:
-                    task.status = 'Завершена'
+                task.status = convert_statuses[task.status]
             context['tasks'] = tasks
 
             users = await team_service.get_users(team_id)
             for user in users:
-                if user.role == UserRoles.ADMIN:
-                    user.role = 'Админ'
-                elif user.role == UserRoles.MANAGER:
-                    user.role = 'Менеджер'
-                else:
-                    user.role = 'Пользователь'
+                user.role = convert_roles[user.role]
             context['users'] = users
 
             context['evaluation'] = await team_service.get_avg_evaluation(user.user_id, team_id)
