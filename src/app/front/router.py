@@ -11,6 +11,7 @@ from app.core.security import require_member
 from app.schemas.tasks import TaskStatuses
 from app.schemas.teams import UserRoles
 from app.services.calendar import CalendarService, get_calendar_service
+from app.services.comments import CommentService, get_comment_service
 from app.services.tasks import TaskService, get_task_service
 from app.services.teams import TeamService, get_team_service
 
@@ -97,7 +98,7 @@ async def task_page(
     task_id: int,
     request: Request,
     session: Annotated[AsyncSession, Depends(get_session)],
-    task_service: Annotated[TaskService, Depends(get_task_service)],
+    comment_service: Annotated[CommentService, Depends(get_comment_service)],
 ):
     context = request.state.context
     context['team_id'] = team_id
@@ -113,6 +114,9 @@ async def task_page(
             task = await get_task_by_id(session, task_id)
             task.status = convert_statuses[task.status]
             context['task'] = task
+
+            comments = await comment_service.get_comments_by_task(task_id, team_id)
+            context['comments'] = comments
 
         except Exception:
             context['error'] = True

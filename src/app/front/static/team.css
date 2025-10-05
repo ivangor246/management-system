@@ -35,6 +35,6 @@
     margin: 1rem 0;
 }
 
-#exclude-user-form {
+.exclude-user-form {
     flex-direction: row;
 }

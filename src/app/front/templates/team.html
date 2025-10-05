@@ -21,7 +21,7 @@
         <div class="users">
             <h2>Все члены комады</h2>
             {% for user in context.users %}
-                <form id="exclude-user-form" data-user-id="{{ user.user_id }}">
+                <form class="exclude-user-form" data-user-id="{{ user.user_id }}">
                     <p>Пользователь
                         {% if user.user_id == context.user.id %}(Вы){% endif %}
                         : {{ user.username }} (Роль: {{ user.role }}, ID: {{user.user_id}})</p>
@@ -121,33 +121,35 @@
             });
 
             // exclude user form
-            document.getElementById("exclude-user-form").addEventListener("submit", async (event) => {
-                event.preventDefault();
+            document.querySelectorAll(".exclude-user-form").forEach(form => {
+                form.addEventListener("submit", async (event) => {
+                    event.preventDefault();
 
-                const token = document.cookie
-                    .split("; ")
-                    .find(row => row.startsWith("access_token="))
-                    ?.split("=")[1];
+                    const token = document.cookie
+                        .split("; ")
+                        .find(row => row.startsWith("access_token="))
+                        ?.split("=")[1];
 
-                const user_id = event.target.dataset.userId;
+                    const user_id = form.dataset.userId;
 
-                try {
-                    const response = await fetch(`/api/teams/{{ context.team_id }}/users/${user_id}`, {
-                        method: "DELETE",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": `Bearer ${token}`,
-                        },                            
-                    });
+                    try {
+                        const response = await fetch(`/api/teams/{{ context.team_id }}/users/${user_id}`, {
+                            method: "DELETE",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": `Bearer ${token}`,
+                            },
+                        });
 
-                    if (response.ok) {
-                        window.location.reload();
-                    } else {
-                        alert("Ошибка при исключении пользователя");
+                        if (response.ok) {
+                            form.remove(); // можно удалить элемент без перезагрузки
+                        } else {
+                            alert("Ошибка при исключении пользователя");
+                        }
+                    } catch {
+                        alert("Ошибка сети");
                     }
-                } catch {
-                    alert("Ошибка сети");
-                }
+                });
             });
 
             // add task form

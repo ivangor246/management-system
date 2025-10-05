@@ -10,6 +10,7 @@ from app.core.database import get_session
 from app.core.security import get_request_user
 from app.models.tasks import Task
 from app.models.teams import UserTeam
+from app.schemas.tasks import TaskSchema
 from app.schemas.teams import UserRoles
 
 http_bearer = HTTPBearer(auto_error=False)
@@ -53,7 +54,8 @@ async def get_team_role(
 async def get_task_by_id(
     session: AsyncSession,
     task_id: int,
-) -> Task:
+) -> TaskSchema:
     stmt = select(Task).where(Task.id == task_id).options(selectinload(Task.evaluation))
     result = await session.execute(stmt)
-    return result.scalar_one_or_none()
+    task = result.scalar_one_or_none()
+    return TaskSchema.model_validate(task)
