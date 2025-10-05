@@ -111,6 +111,7 @@ async def task_page(
             context['role'] = convert_roles[role]
 
             task = await get_task_by_id(session, task_id)
+            task.status = convert_statuses[task.status]
             context['task'] = task
 
         except Exception:

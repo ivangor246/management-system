@@ -18,6 +18,78 @@
             <p><b>ID исполнителя: </b>{{ context.task.performer_id }}</p>
         </div>
 
+        {% if context.role in ["Админ", "Менеджер"] %}
+            <form id="update-task-form" class="page-form">
+                <h2>Изменить задачу</h2>
+
+                <div class="input-block">
+                    <label for="description-input">Описание:</label>
+                    <input type="text" name="description" id="description-input">
+                </div>
+
+                <div class="input-block">
+                    <label for="deadline-input">Дедлайн:</label>
+                    <input type="date" name="deadline" id="deadline-input">
+                </div>
+
+                <div class="input-block">
+                    <label for="performer-id-input">ID исполнителя:</label>
+                    <input type="text" name="performer_id" id="performer-id-input">
+                </div>
+
+                <div class="input-block">
+                    <label for="status-select">Статус:</label>
+                    <select name="status" id="status-select">
+                        <option value="">Не выбрано</option>
+                        <option value="o">Открыта</option>
+                        <option value="w">В работе</option>
+                        <option value="c">Завершена</option>
+                    </select>
+                </div>
+
+                <button class="form-btn">Отправить</button>
+
+                <script>
+                    document.getElementById("update-task-form").addEventListener("submit", async (event) => {
+                        event.preventDefault();
+
+                        const token = document.cookie
+                            .split("; ")
+                            .find(row => row.startsWith("access_token="))
+                            ?.split("=")[1];
+
+                        const form_data = new FormData(event.target);
+                        const data = Object.fromEntries(form_data);
+
+                        Object.keys(data).forEach((key) => {
+                            if (data[key] === "" || data[key] == null) {
+                                delete data[key];
+                            }
+                        });
+
+                        try {
+                            const response = await fetch("/api/teams/{{ context.team_id }}/tasks/{{ context.task_id }}", {
+                                method: "PUT",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Authorization": `Bearer ${token}`,
+                                },                            
+                                body: JSON.stringify(data),
+                            });
+
+                            if (response.ok) {
+                                window.location.reload();
+                            } else {
+                                alert("Ошибка при обновлении данных");
+                            }
+                        } catch {
+                            alert("Ошибка сети");
+                        }
+                    });
+                </script>
+            </form>
+        {% endif %}
+
     {% else %}
         <script>
             (() => {
