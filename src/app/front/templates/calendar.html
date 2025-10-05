@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Календарь{% endblock title %}
+
+{% block links %}
+    <link rel="stylesheet" href="/static/calendar.css">
+{% endblock links %}
+
+
+{% block content %}
+    <h1>Календарь</h1>
+
+    {% if context.user and not context.error %}
+        {% if context.calendar_day and context.calendar_day.events %}
+            <h2 class="calendar-title">Календарь на сегодня</h2>
+            {% for event in context.calendar_day.events %}
+                <div class="event-block">
+                    {% if event.deadline %}
+                        <p>Описание задачи: <b>{{ event.description }}</b></p>
+                        <p>Дедлайн: <b>{{ event.deadline }}</b></p>
+                        <p>ID исполнителя: <b>{{ event.performer_id }}</b></p>
+                    {% else %}
+                        <p>Встреча: <b>{{ event.name }}</b></p>
+                        <p>Дата: <b>{{ event.date }}</b></p>
+                        <p>Время: <b>{{ event.time.strftime("%H:%M") }}</b></p>
+                    {% endif %}
+                </div>
+                <div class="hor-line"></div>
+            {% endfor %}
+        {% else %}
+            <h2 class="calendar-title">На сегодня событий нет</h2>
+        {% endif %}
+
+        {% if context.calendar_month and context.calendar_month.events %}
+            <h2 class="calendar-title">Календарь на этот месяц</h2>
+            {% for event in context.calendar_month.events %}
+                <div class="event-block">
+                    {% if event.deadline %}
+                        <p>Описание задачи: <b>{{ event.description }}</b></p>
+                        <p>Дедлайн: <b>{{ event.deadline }}</b></p>
+                        <p>ID исполнителя: <b>{{ event.performer_id }}</b></p>
+                    {% else %}
+                        <p>Встреча: <b>{{ event.name }}</b></p>
+                        <p>Дата: <b>{{ event.date }}</b></p>
+                        <p>Время: <b>{{ event.time.strftime("%H:%M") }}</b></p>
+                    {% endif %}
+                </div>
+                <div class="hor-line"></div>
+            {% endfor %}
+        {% else %}
+            <h2 class="calendar-title">На этот месяц событий нет</h2>
+        {% endif %}
+
+    {% else %}
+        <script>
+            (() => {
+                document.location.href = "/";
+            })();
+        </script>
+    {% endif %}
+
+{% endblock content %}

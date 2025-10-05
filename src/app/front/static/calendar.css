@@ -1,0 +1,9 @@
+.calendar-title {
+    margin-top: 2rem;
+}
+.event-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}

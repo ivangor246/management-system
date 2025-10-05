@@ -88,9 +88,6 @@ async def team_page(
             meetings = await meeting_service.get_meetings_by_team(team_id)
             context['meetings'] = meetings
 
-            now = datetime.now()
-            context['calendar_day'] = await calendar_service.get_calendar_by_date(team_id, now.date())
-            context['calendar_month'] = await calendar_service.get_calendar_by_month(team_id, now.year, now.month)
         except Exception:
             context['error'] = True
 
@@ -160,6 +157,32 @@ async def meeting_page(
             context['error'] = True
 
     return templates.TemplateResponse('meeting.html', {'request': request, 'context': context})
+
+
+@front_router.get('/teams/{team_id:int}/calendar', response_class=HTMLResponse)
+async def calendar_page(
+    team_id: int,
+    request: Request,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    calendar_service: Annotated[CalendarService, Depends(get_calendar_service)],
+):
+    context = request.state.context
+    context['team_id'] = team_id
+    user = context.get('user')
+    if user:
+        try:
+            await require_member(team_id, user, session)
+
+            role = await get_team_role(session, user.id, team_id)
+            context['role'] = convert_roles[role]
+
+            now = datetime.now()
+            context['calendar_day'] = await calendar_service.get_calendar_by_date(team_id, now.date())
+            context['calendar_month'] = await calendar_service.get_calendar_by_month(team_id, now.year, now.month)
+        except Exception:
+            context['error'] = True
+
+    return templates.TemplateResponse('calendar.html', {'request': request, 'context': context})
 
 
 @front_router.get('/register', response_class=HTMLResponse)

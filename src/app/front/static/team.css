@@ -38,16 +38,6 @@ select, option {
     gap: 0.5rem;
 }
 
-.calendar-title {
-    margin-top: 2rem;
-}
-.event-block {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin: 1rem 0;
-}
-
 .exclude-user-form {
     flex-direction: row;
 }
