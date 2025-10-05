@@ -8,6 +8,7 @@ and registers admin views for the main models.
 from fastapi import FastAPI
 from sqladmin import Admin
 from sqlalchemy import inspect, select
+from sqlalchemy.exc import IntegrityError
 
 from app.core.config import config
 from app.core.database import engine, session_factory
@@ -49,7 +50,10 @@ async def create_admin_if_not_exists():
                 is_admin=True,
             )
             session.add(admin)
-            await session.commit()
+            try:
+                await session.commit()
+            except IntegrityError:
+                await session.rollback()
 
 
 def init_admin(app: FastAPI):
