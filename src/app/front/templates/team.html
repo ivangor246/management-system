@@ -31,6 +31,7 @@
 
         <form id="add-user-form" class="page-form">
             <h2>Добавить / изменить роль пользователя</h2>
+
             <div class="input-block">
                 <label for="user-id-input">ID пользователя:</label>
                 <input type="text" name="user_id" required id="user-id-input">
@@ -46,71 +47,132 @@
             </div>
 
             <button class="form-btn">Отправить</button>
-
-            <script>
-                // add user form
-                document.getElementById("add-user-form").addEventListener("submit", async (event) => {
-                    event.preventDefault();
-
-                    const token = document.cookie
-                        .split("; ")
-                        .find(row => row.startsWith("access_token="))
-                        ?.split("=")[1];
-
-                    const form_data = new FormData(event.target);
-                    const data = Object.fromEntries(form_data);
-
-                    try {
-                        const response = await fetch("/api/teams/{{ context.team_id }}/users", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "Authorization": `Bearer ${token}`,
-                            },
-                            body: JSON.stringify(data),
-                        });
-
-                        if (response.ok) {
-                            window.location.reload();
-                        } else {
-                            alert("Ошибка при добавление / изменении");
-                        }
-                    } catch {
-                        alert("Ошибка сети");
-                    }
-                });
-
-                // exclude user form
-                document.getElementById("exclude-user-form").addEventListener("submit", async (event) => {
-                    event.preventDefault();
-
-                    const token = document.cookie
-                        .split("; ")
-                        .find(row => row.startsWith("access_token="))
-                        ?.split("=")[1];
-
-                    const user_id = event.target.dataset.userId;
-
-                    try {
-                        const response = await fetch(`/api/teams/{{ context.team_id }}/users/${user_id}`, {
-                            method: "DELETE",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "Authorization": `Bearer ${token}`,
-                            },                            
-                        });
-
-                        if (response.ok) {
-                            window.location.reload();
-                        } else {
-                            alert("Ошибка при исключении пользователя");
-                        }
-                    } catch {
-                        alert("Ошибка сети");
-                    }
-                });
-            </script>
         </form>
+
+        <form id="add-task-form" class="page-form">
+            <h2>Создать задачу</h2>
+
+            <div class="input-block">
+                <label for="description-input">Описание:</label>
+                <input type="text" name="description" required id="description-input">
+            </div>
+
+            <div class="input-block">
+                <label for="deadline-input">Дедлайн:</label>
+                <input type="date" name="deadline" required id="deadline-input">
+            </div>
+
+            <div class="input-block">
+                <label for="performer-id-input">ID исполнителя:</label>
+                <input type="text" name="performer_id" required id="performer-id-input">
+            </div>
+
+            <div class="input-block">
+                <label for="status-select">Статус:</label>
+                <select name="status" id="status-select">
+                    <option value="o">Открыта</option>
+                    <option value="w">В работе</option>
+                </select>
+            </div>
+
+            <button class="form-btn">Отправить</button>
+        </form>
+
+        <script>
+            // add user form
+            document.getElementById("add-user-form").addEventListener("submit", async (event) => {
+                event.preventDefault();
+
+                const token = document.cookie
+                    .split("; ")
+                    .find(row => row.startsWith("access_token="))
+                    ?.split("=")[1];
+
+                const form_data = new FormData(event.target);
+                const data = Object.fromEntries(form_data);
+
+                try {
+                    const response = await fetch("/api/teams/{{ context.team_id }}/users", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`,
+                        },
+                        body: JSON.stringify(data),
+                    });
+
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert("Ошибка при добавление / изменении");
+                    }
+                } catch {
+                    alert("Ошибка сети");
+                }
+            });
+
+            // exclude user form
+            document.getElementById("exclude-user-form").addEventListener("submit", async (event) => {
+                event.preventDefault();
+
+                const token = document.cookie
+                    .split("; ")
+                    .find(row => row.startsWith("access_token="))
+                    ?.split("=")[1];
+
+                const user_id = event.target.dataset.userId;
+
+                try {
+                    const response = await fetch(`/api/teams/{{ context.team_id }}/users/${user_id}`, {
+                        method: "DELETE",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`,
+                        },                            
+                    });
+
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert("Ошибка при исключении пользователя");
+                    }
+                } catch {
+                    alert("Ошибка сети");
+                }
+            });
+
+            // add task form
+            document.getElementById("add-task-form").addEventListener("submit", async (event) => {
+                event.preventDefault();
+
+                const token = document.cookie
+                    .split("; ")
+                    .find(row => row.startsWith("access_token="))
+                    ?.split("=")[1];
+
+                const form_data = new FormData(event.target);
+                const data = Object.fromEntries(form_data);
+
+                try {
+                    const response = await fetch("/api/teams/{{ context.team_id }}/tasks", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`,
+                        },
+                        body: JSON.stringify(data),
+                    });
+
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert("Ошибка при создании задачи");
+                    }
+                } catch {
+                    alert("Ошибка сети");
+                }
+            });
+        </script>
 
         <div class="tasks">
             {% if context.tasks %}
