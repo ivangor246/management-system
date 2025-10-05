@@ -84,10 +84,83 @@
 
                 <button class="form-btn">Отправить</button>
             </form>
+
+            <form id="add-meeting-form" class="page-form">
+                <h2>Создать встречу</h2>
+
+                <div class="input-block">
+                    <label for="name-input">Название:</label>
+                    <input type="text" name="name" required id="name-input">
+                </div>
+
+                <div class="input-block">
+                    <label for="date-input">Дата:</label>
+                    <input type="date" name="date" required id="date-input">
+                </div>
+
+                <div class="input-block">
+                    <label for="time-input">Время:</label>
+                    <input type="time" name="time" required id="time-input">
+                </div>
+
+                <div class="input-block">
+                    <label for="member-ids-select">Участники:</label>
+                    <select name="member_ids" id="member-ids-select" multiple size="5" required>
+                        {% for user in context.users %}
+                            <option value="{{ user.user_id }}">{{ user.username }} (ID: {{ user.user_id }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <button class="form-btn">Отправить</button>
+            </form>
         {% endif %}
 
         
         <script>
+            // add meeting form
+            document.getElementById("add-meeting-form").addEventListener("submit", async (event) => {
+                event.preventDefault();
+
+                const token = document.cookie
+                    .split("; ")
+                    .find(row => row.startsWith("access_token="))
+                    ?.split("=")[1];
+
+                const form = event.target;
+                const form_data = new FormData(form);
+                const data = Object.fromEntries(form_data);
+
+                const selectedOptions = Array.from(form.querySelectorAll("#member-ids-select option:checked"));
+                const memberIds = selectedOptions.map(option => Number(option.value));
+
+                if (memberIds.length === 0) {
+                    alert("Выберите хотя бы одного участника");
+                    return;
+                }
+
+                data.member_ids = memberIds;
+
+                try {
+                    const response = await fetch("/api/teams/{{ context.team_id }}/meetings", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`,
+                        },
+                        body: JSON.stringify(data),
+                    });
+
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert("Ошибка при создании встречи");
+                    }
+                } catch {
+                    alert("Ошибка сети");
+                }
+            });
+
             // add user form
             document.getElementById("add-user-form").addEventListener("submit", async (event) => {
                 event.preventDefault();
@@ -113,7 +186,7 @@
                     if (response.ok) {
                         window.location.reload();
                     } else {
-                        alert("Ошибка при добавление / изменении");
+                        alert("Ошибка при добавлени / изменении");
                     }
                 } catch {
                     alert("Ошибка сети");
@@ -213,7 +286,7 @@
                     {% else %}
                         <p>Встреча: <b>{{ event.name }}</b></p>
                         <p>Дата: <b>{{ event.date }}</b></p>
-                        <p>Время (часы): <b>{{ event.time.strftime("%H") }}</b></p>
+                        <p>Время: <b>{{ event.time.strftime("%H:%M") }}</b></p>
                     {% endif %}
                 </div>
                 <div class="hor-line"></div>
@@ -231,7 +304,7 @@
                     {% else %}
                         <p>Встреча: <b>{{ event.name }}</b></p>
                         <p>Дата: <b>{{ event.date }}</b></p>
-                        <p>Время (часы): <b>{{ event.time.strftime("%H") }}</b></p>
+                        <p>Время: <b>{{ event.time.strftime("%H:%M") }}</b></p>
                     {% endif %}
                 </div>
                 <div class="hor-line"></div>
