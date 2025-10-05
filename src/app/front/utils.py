@@ -4,6 +4,7 @@ from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.database import get_session
 from app.core.security import get_request_user
@@ -53,6 +54,6 @@ async def get_task_by_id(
     session: AsyncSession,
     task_id: int,
 ) -> Task:
-    stmt = select(Task).where(Task.id == task_id)
+    stmt = select(Task).where(Task.id == task_id).options(selectinload(Task.evaluation))
     result = await session.execute(stmt)
     return result.scalar_one_or_none()

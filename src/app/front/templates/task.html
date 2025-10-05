@@ -16,6 +16,9 @@
             <p><b>Дедлайн: </b>{{ context.task.deadline }}</p>
             <p><b>Статус: </b>{{ context.task.status }}</p>
             <p><b>ID исполнителя: </b>{{ context.task.performer_id }}</p>
+            {% if context.task.evaluation %}
+                <p><b>Оценка: </b>{{ context.task.evaluation.value }}</p>
+            {% endif %}
         </div>
 
         {% if context.role in ["Админ", "Менеджер"] %}
@@ -86,6 +89,51 @@
                             alert("Ошибка сети");
                         }
                     });
+                </script>
+            </form>
+
+            <form id="update-evaluation-form" class="page-form">
+                <h2>Поставить оценку</h2>
+
+                <div class="input-block">
+                    <label for="value-input">Оценка (от 1 до 5):</label>
+                    <input type="text" name="value" required id="value-input">
+                </div>
+
+                <button class="form-btn">Отправить</button>
+
+                <script>
+                    document.getElementById("update-evaluation-form").addEventListener("submit", async (event) => {
+                        event.preventDefault();
+
+                        const token = document.cookie
+                            .split("; ")
+                            .find(row => row.startsWith("access_token="))
+                            ?.split("=")[1];
+
+                        const form_data = new FormData(event.target);
+                        const data = Object.fromEntries(form_data);
+
+                        try {
+                            const response = await fetch("/api/teams/{{ context.team_id }}/tasks/{{ context.task_id }}/evaluation", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Authorization": `Bearer ${token}`,
+                                },
+                                body: JSON.stringify(data),
+                            });
+
+                            if (response.ok) {
+                                window.location.reload();
+                            } else {
+                                alert("Ошибка при обновлении оценки");
+                            }
+                        } catch {
+                            alert("Ошибка сети");
+                        }
+                    });
+
                 </script>
             </form>
 
